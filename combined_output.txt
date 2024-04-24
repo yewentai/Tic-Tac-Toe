@@ -1,0 +1,1015 @@
+----- Start of ViewController.swift -----
+//
+//  ViewController.swift
+//  AR-TicTacToe
+//
+//  Created by Bjarne Møller Lundgren on 20/06/2017.
+//  Copyright © 2017 Bjarne Møller Lundgren. All rights reserved.
+//
+
+import UIKit
+import SceneKit
+import ARKit
+
+class ViewController: UIViewController, ARSCNViewDelegate {
+    
+    // UI
+    @IBOutlet weak var planeSearchLabel: UILabel!
+    @IBOutlet weak var planeSearchOverlay: UIView!
+    @IBOutlet weak var gameStateLabel: UILabel!
+    @IBAction func didTapStartOver(_ sender: Any) { reset() }
+    @IBOutlet weak var sceneView: ARSCNView!
+    
+    // State
+    private func updatePlaneOverlay() {
+        DispatchQueue.main.async {
+            
+        self.planeSearchOverlay.isHidden = self.currentPlane != nil
+        
+        if self.planeCount == 0 {
+            self.planeSearchLabel.text = "Move around to allow the app the find a plane..."
+        } else {
+            self.planeSearchLabel.text = "Tap on a plane surface to place board..."
+        }
+            
+        }
+    }
+    
+    var playerType = [
+        GamePlayer.x: GamePlayerType.human,
+        GamePlayer.o: GamePlayerType.ai
+    ]
+    var planeCount = 0 {
+        didSet {
+            updatePlaneOverlay()
+        }
+    }
+    var currentPlane:SCNNode? {
+        didSet {
+            updatePlaneOverlay()
+            newTurn()
+        }
+    }
+    let board = Board()
+    var game:GameState! {
+        didSet {
+            gameStateLabel.text = game.currentPlayer.rawValue + ":" + playerType[game.currentPlayer]!.rawValue.uppercased() + " to " + game.mode.rawValue
+            
+            if let winner = game.currentWinner {
+                let alert = UIAlertController(title: "Game Over", message: "\(winner.rawValue) wins!!!!", preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "Ok", style: .default, handler: { action in
+                    self.reset()
+                }))
+                present(alert, animated: true, completion: nil)
+            } else {
+                if currentPlane != nil {
+                    newTurn()
+                }
+            }
+        }
+    }
+    var figures:[String:SCNNode] = [:]
+    var lightNode:SCNNode?
+    var floorNode:SCNNode?
+    var draggingFrom:GamePosition? = nil
+    var draggingFromPosition:SCNVector3? = nil
+    
+    // from demo APP
+    // Use average of recent virtual object distances to avoid rapid changes in object scale.
+    var recentVirtualObjectDistances = [CGFloat]()
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        game = GameState()  // create new game
+        
+        sceneView.delegate = self
+        //sceneView.showsStatistics = true
+        //sceneView.antialiasingMode = .multisampling4X
+        //sceneView.preferredFramesPerSecond = 60
+        //sceneView.contentScaleFactor = 1.3
+        sceneView.antialiasingMode = .multisampling4X
+        
+        sceneView.automaticallyUpdatesLighting = false
+        
+        let tap = UITapGestureRecognizer()
+        tap.addTarget(self, action: #selector(didTap))
+        sceneView.addGestureRecognizer(tap)
+        
+        let pan = UIPanGestureRecognizer()
+        pan.addTarget(self, action: #selector(didPan))
+        sceneView.addGestureRecognizer(pan)
+    }
+    
+    // from APples app
+    func enableEnvironmentMapWithIntensity(_ intensity: CGFloat) {
+        if sceneView.scene.lightingEnvironment.contents == nil {
+            if let environmentMap = UIImage(named: "Media.scnassets/environment_blur.exr") {
+                sceneView.scene.lightingEnvironment.contents = environmentMap
+            }
+        }
+        sceneView.scene.lightingEnvironment.intensity = intensity
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        let configuration = ARWorldTrackingConfiguration()
+        configuration.planeDetection = .horizontal
+        configuration.isLightEstimationEnabled = true
+        
+        sceneView.session.run(configuration)
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        
+        sceneView.session.pause()
+    }
+    
+    private func reset() {
+        let alert = UIAlertController(title: "Game type", message: "Choose players", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "x:HUMAN vs o:AI", style: .default, handler: { action in
+            self.beginNewGame([
+                GamePlayer.x: GamePlayerType.human,
+                GamePlayer.o: GamePlayerType.ai
+                ])
+        }))
+        alert.addAction(UIAlertAction(title: "x:HUMAN vs o:HUMAN", style: .default, handler: { action in
+            self.beginNewGame([
+                GamePlayer.x: GamePlayerType.human,
+                GamePlayer.o: GamePlayerType.human
+                ])
+        }))
+        alert.addAction(UIAlertAction(title: "x:AI vs o:AI", style: .default, handler: { action in
+            self.beginNewGame([
+                GamePlayer.x: GamePlayerType.ai,
+                GamePlayer.o: GamePlayerType.ai
+                ])
+        }))
+        present(alert, animated: true, completion: nil)
+        
+        
+        
+    }
+    
+    private func beginNewGame(_ players:[GamePlayer:GamePlayerType]) {
+        playerType = players
+        game = GameState()
+        
+        removeAllFigures()
+        
+        figures.removeAll()
+    }
+    
+    private func newTurn() {
+        guard playerType[game.currentPlayer]! == .ai else { return }
+        
+        //run AI on background thread
+        DispatchQueue.global(qos: DispatchQoS.QoSClass.background).async {
+            // let the AI determine which action to perform
+            let action = GameAI(game: self.game).bestAction
+                
+            // once an action has been determined, perform it on main thread
+            DispatchQueue.main.async {
+                // perform action or crash (game AI should never return an invalid action!)
+                guard let newGameState = self.game.perform(action: action) else { fatalError() }
+                    
+                // block to execute after we have updated/animated the visual state of the game
+                let updateGameState = {
+                    // for some reason we have to put this in a main.async block in order to actually
+                    // get to main thread. It appears that SceneKit animations do not return on mainthread..
+                    DispatchQueue.main.async {
+                        self.game = newGameState
+                    }
+                }
+                
+                // animate action
+                switch action {
+                case .put(let at):
+                    self.put(piece: Figure.figure(for: self.game.currentPlayer),
+                             at: at,
+                             completionHandler: updateGameState)
+                    
+                case .move(let from, let to):
+                    self.move(from: from,
+                              to: to,
+                              completionHandler: updateGameState)
+                }
+                
+            }
+        }
+    }
+    
+    private func removeAllFigures() {
+        for (_, figure) in figures {
+            figure.removeFromParentNode()
+        }
+    }
+    
+    private func restoreGame(at position:SCNVector3) {
+        board.node.position = position
+        sceneView.scene.rootNode.addChildNode(board.node)
+        
+        let light = SCNLight()
+        light.type = .directional
+        light.castsShadow = true
+        light.shadowRadius = 200
+        light.shadowColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.3)
+        light.shadowMode = .deferred
+        let constraint = SCNLookAtConstraint(target: board.node)
+        lightNode = SCNNode()
+        lightNode!.light = light
+        lightNode!.position = SCNVector3(position.x + 10, position.y + 10, position.z)
+        // lightNode!.eulerAngles = SCNVector3(45.0.degreesToRadians, 0, 0)
+        lightNode!.constraints = [constraint]
+        sceneView.scene.rootNode.addChildNode(lightNode!)
+ 
+        
+        for (key, figure) in figures {
+            // yeah yeah, I know I should turn GamePosition into a struct and provide it with
+            // Equtable and Hashable then this stupid stringy stuff would be gone. Will do this eventually
+            let xyComponents = key.components(separatedBy: "x")
+            guard xyComponents.count == 2,
+                  let x = Int(xyComponents[0]),
+                  let y = Int(xyComponents[1]) else { fatalError() }
+            put(piece: figure,
+                at: (x: x,
+                     y: y))
+        }
+    }
+    
+    private func groundPositionFrom(location:CGPoint) -> SCNVector3? {
+        let results = sceneView.hitTest(location,
+                                        types: ARHitTestResult.ResultType.existingPlaneUsingExtent)
+        
+        guard results.count > 0 else { return nil }
+        
+        return SCNVector3.positionFromTransform(results[0].worldTransform)
+    }
+    
+    private func anyPlaneFrom(location:CGPoint) -> (SCNNode, SCNVector3)? {
+        let results = sceneView.hitTest(location,
+                                        types: ARHitTestResult.ResultType.existingPlaneUsingExtent)
+        
+        guard results.count > 0,
+              let anchor = results[0].anchor,
+              let node = sceneView.node(for: anchor) else { return nil }
+        
+        return (node, SCNVector3.positionFromTransform(results[0].worldTransform))
+    }
+    
+    private func squareFrom(location:CGPoint) -> ((Int, Int), SCNNode)? {
+        guard let _ = currentPlane else { return nil }
+        
+        let hitResults = sceneView.hitTest(location, options: [SCNHitTestOption.firstFoundOnly: false,
+                                                               SCNHitTestOption.rootNode:       board.node])
+        
+        for result in hitResults {
+            if let square = board.nodeToSquare[result.node] {
+                return (square, result.node)
+            }
+        }
+        
+        return nil
+    }
+    
+    private func revertDrag() {
+        if let draggingFrom = draggingFrom {
+            
+            let restorePosition = sceneView.scene.rootNode.convertPosition(draggingFromPosition!, from: board.node)
+            let action = SCNAction.move(to: restorePosition, duration: 0.3)
+            figures["\(draggingFrom.x)x\(draggingFrom.y)"]?.runAction(action)
+            
+            self.draggingFrom = nil
+            self.draggingFromPosition = nil
+        }
+    }
+    
+    // MARK: - Gestures
+    
+    @objc func didPan(_ sender:UIPanGestureRecognizer) {
+        guard case .move = game.mode,
+              playerType[game.currentPlayer]! == .human else { return }
+        
+        let location = sender.location(in: sceneView)
+        
+        switch sender.state {
+        case .began:
+            print("begin \(location)")
+            guard let square = squareFrom(location: location) else { return }
+            draggingFrom = (x: square.0.0, y: square.0.1)
+            draggingFromPosition = square.1.position
+            
+        case .cancelled:
+            print("cancelled \(location)")
+            revertDrag()
+            
+        case .changed:
+            print("changed \(location)")
+            guard let draggingFrom = draggingFrom,
+                  let groundPosition = groundPositionFrom(location: location) else { return }
+            
+            let action = SCNAction.move(to: SCNVector3(groundPosition.x, groundPosition.y + Float(Dimensions.DRAG_LIFTOFF), groundPosition.z),
+                                        duration: 0.1)
+            figures["\(draggingFrom.x)x\(draggingFrom.y)"]?.runAction(action)
+            
+        case .ended:
+            print("ended \(location)")
+            
+            guard let draggingFrom = draggingFrom,
+                let square = squareFrom(location: location),
+                square.0.0 != draggingFrom.x || square.0.1 != draggingFrom.y,
+                let newGameState = game.perform(action: .move(from: draggingFrom,
+                                                              to: (x: square.0.0, y: square.0.1))) else {
+                    revertDrag()
+                    return
+            }
+            
+            
+            
+            // move in visual model
+            let toSquareId = "\(square.0.0)x\(square.0.1)"
+            figures[toSquareId] = figures["\(draggingFrom.x)x\(draggingFrom.y)"]
+            figures["\(draggingFrom.x)x\(draggingFrom.y)"] = nil
+            self.draggingFrom = nil
+            
+            // copy pasted insert thingie
+            let newPosition = sceneView.scene.rootNode.convertPosition(square.1.position,
+                                                                       from: square.1.parent)
+            let action = SCNAction.move(to: newPosition,
+                                        duration: 0.1)
+            figures[toSquareId]?.runAction(action) {
+                DispatchQueue.main.async {
+                    self.game = newGameState
+                }
+            }
+            
+        case .failed:
+            print("failed \(location)")
+            revertDrag()
+            
+        default: break
+        }
+    }
+    
+    @objc func didTap(_ sender:UITapGestureRecognizer) {
+        let location = sender.location(in: sceneView)
+        
+        // tap to place board..
+        guard let _ = currentPlane else {
+            guard let newPlaneData = anyPlaneFrom(location: location) else { return }
+            
+            let floor = SCNFloor()
+            floor.reflectivity = 0
+            let material = SCNMaterial()
+            material.diffuse.contents = UIColor.white
+            
+            // https://stackoverflow.com/questions/30975695/scenekit-is-it-possible-to-cast-an-shadow-on-an-transparent-object/44799498#44799498
+            material.colorBufferWriteMask = SCNColorMask(rawValue: 0)
+            floor.materials = [material]
+            
+            floorNode = SCNNode(geometry: floor)
+            floorNode!.position = newPlaneData.1
+            sceneView.scene.rootNode.addChildNode(floorNode!)
+            
+            self.currentPlane = newPlaneData.0
+            restoreGame(at: newPlaneData.1)
+            
+            return
+        }
+        
+        // otherwise tap to place board piece.. (if we're in "put" mode)
+        guard case .put = game.mode,
+              playerType[game.currentPlayer]! == .human else { return }
+        
+        if let squareData = squareFrom(location: location),
+           let newGameState = game.perform(action: .put(at: (x: squareData.0.0,
+                                                             y: squareData.0.1))) {
+            
+            put(piece: Figure.figure(for: game.currentPlayer),
+                at: squareData.0) {
+                    DispatchQueue.main.async {
+                        self.game = newGameState
+                    }
+            }
+            
+            
+        }
+    }
+    
+    /// animates AI moving a piece
+    private func move(from:GamePosition,
+                      to:GamePosition,
+                      completionHandler: (() -> Void)? = nil) {
+        
+        let fromSquareId = "\(from.x)x\(from.y)"
+        let toSquareId = "\(to.x)x\(to.y)"
+        guard let piece = figures[fromSquareId],
+              let rawDestinationPosition = board.squareToPosition[toSquareId]  else { fatalError() }
+        
+        // this stuff will change once we stop putting nodes directly in world space..
+        let destinationPosition = sceneView.scene.rootNode.convertPosition(rawDestinationPosition,
+                                                                           from: board.node)
+        
+        // update visual game state
+        figures[toSquareId] = piece
+        figures[fromSquareId] = nil
+        
+        // create drag and drop animation
+        let pickUpAction = SCNAction.move(to: SCNVector3(piece.position.x, piece.position.y + Float(Dimensions.DRAG_LIFTOFF), piece.position.z),
+                                          duration: 0.25)
+        let moveAction = SCNAction.move(to: SCNVector3(destinationPosition.x, destinationPosition.y + Float(Dimensions.DRAG_LIFTOFF), destinationPosition.z),
+                                        duration: 0.5)
+        let dropDownAction = SCNAction.move(to: destinationPosition,
+                                            duration: 0.25)
+        
+        // run drag and drop animation
+        piece.runAction(pickUpAction) {
+            piece.runAction(moveAction) {
+                piece.runAction(dropDownAction,
+                                completionHandler: completionHandler)
+            }
+        }
+    }
+    
+    /// renders user and AI insert of piece
+    private func put(piece:SCNNode,
+                     at position:GamePosition,
+                     completionHandler: (() -> Void)? = nil) {
+        let squareId = "\(position.x)x\(position.y)"
+        guard let squarePosition = board.squareToPosition[squareId] else { fatalError() }
+        
+        piece.opacity = 0  // initially invisible
+        // // https://stackoverflow.com/questions/30392579/convert-local-coordinates-to-scene-coordinates-in-scenekit
+        piece.position = sceneView.scene.rootNode.convertPosition(squarePosition,
+                                                                  from: board.node)
+        sceneView.scene.rootNode.addChildNode(piece)
+        figures[squareId] = piece
+        
+        let action = SCNAction.fadeIn(duration: 0.5)
+        piece.runAction(action,
+                        completionHandler: completionHandler)
+    }
+    
+    
+    // MARK: - ARSCNViewDelegate
+    
+    func renderer(_ renderer: SCNSceneRenderer, updateAtTime time: TimeInterval) {
+        
+        // from apples app
+        DispatchQueue.main.async {
+            // If light estimation is enabled, update the intensity of the model's lights and the environment map
+            if let lightEstimate = self.sceneView.session.currentFrame?.lightEstimate {
+                
+                // Apple divived the ambientIntensity by 40, I find that, atleast with the materials used
+                // here that it's a big too bright, so I increased to to 50..
+                self.enableEnvironmentMapWithIntensity(lightEstimate.ambientIntensity / 50)
+            } else {
+                self.enableEnvironmentMapWithIntensity(25)
+            }
+        }
+    }
+    
+    // did at plane(?)
+    func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
+        planeCount += 1
+    }
+    
+    // did update plane?
+    func renderer(_ renderer: SCNSceneRenderer, willUpdate node: SCNNode, for anchor: ARAnchor) {
+
+    }
+    
+    // did remove plane?
+    func renderer(_ renderer: SCNSceneRenderer, didRemove node: SCNNode, for anchor: ARAnchor) {
+        if node == currentPlane {
+            removeAllFigures()
+            lightNode?.removeFromParentNode()
+            lightNode = nil
+            floorNode?.removeFromParentNode()
+            floorNode = nil
+            board.node.removeFromParentNode()
+            currentPlane = nil
+        }
+        
+        if planeCount > 0 {
+            planeCount -= 1
+        }
+    }
+    
+}
+
+
+----- End of ViewController.swift -----
+
+----- Start of Board.swift -----
+//
+//  Board.swift
+//  TicTacToe
+//
+//  Created by Wentai Ye on Apr 24 2024
+//  Copyright © 2024 Wentai Ye. All rights reserved.
+//
+
+import Foundation
+import SceneKit
+
+class Board {
+    // SCNNode representing the entire board
+    let node:SCNNode
+    // Dictionary mapping square nodes to their corresponding (row, column) indices
+    let nodeToSquare:[SCNNode:(Int,Int)]
+    // Dictionary mapping square positions (in string format) to their SCNVector3 positions
+    let squareToPosition:[String:SCNVector3]
+    
+    init() {
+        // Initialize the board node
+        node = SCNNode()
+        // Initialize dictionaries to map square nodes to their indices and positions
+        var nodeToSquare = [SCNNode:(Int,Int)]()
+        var squareToPosition = [String:SCNVector3]()
+        
+        // Dimensions of the board
+        let length = Dimensions.SQUARE_SIZE * 4
+        let height:CGFloat = Dimensions.BOARD_GRID_HEIGHT
+        let width:CGFloat = Dimensions.BOARD_GRID_WIDTH
+        
+        // Loop through each row of the board
+        for l in 0..<4 {
+            let lineOffset = length * 0.5 - (CGFloat(l + 1) * Dimensions.SQUARE_SIZE - Dimensions.SQUARE_SIZE * 0.5)
+            
+            // Create squares for each row (except the first row)
+            if l > 0 {
+                for r in 0..<3 {
+                    // Calculate position for each square
+                    let position = SCNVector3(lineOffset + Dimensions.SQUARE_SIZE * 0.5,
+                                              0.01,
+                                              CGFloat(r - 1) * Dimensions.SQUARE_SIZE)
+                    let square = (l - 1, r)
+                    
+                    // Create square geometry
+                    let geometry = SCNPlane(width: Dimensions.SQUARE_SIZE,
+                                            height: Dimensions.SQUARE_SIZE)
+                    geometry.firstMaterial!.diffuse.contents = UIColor.clear
+                    
+                    // Create SCNNode for the square and set its position
+                    let squareNode = SCNNode(geometry: geometry)
+                    squareNode.position = position
+                    squareNode.eulerAngles = SCNVector3(-90.0.degreesToRadians, 0, 0)
+                    
+                    // Add square node to the board node and update dictionaries
+                    node.addChildNode(squareNode)
+                    nodeToSquare[squareNode] = square
+                    squareToPosition["\(square.0)x\(square.1)"] = position
+                }
+            }
+            
+            // Create horizontal and vertical grid lines for the current row
+            let geometry = SCNBox(width: width,
+                                  height: height,
+                                  length: length,
+                                  chamferRadius: height * 0.1)
+            geometry.firstMaterial?.lightingModel = .physicallyBased
+            geometry.firstMaterial?.diffuse.contents = UIImage(named: "Media.scnassets/scuffed-plastic2-alb.png")
+            geometry.firstMaterial?.roughness.contents = UIImage(named: "Media.scnassets/scuffed-plastic-rough.png")
+            geometry.firstMaterial?.metalness.contents = UIImage(named: "Media.scnassets/scuffed-plastic-metal.png")
+            geometry.firstMaterial?.normal.contents = UIImage(named: "Media.scnassets/scuffed-plastic-normal.png")
+            geometry.firstMaterial?.ambientOcclusion.contents = UIImage(named: "Media.scnassets/scuffed-plastic-ao.png")
+            
+            // Create horizontal line node and set its position
+            let horizontalLineNode = SCNNode(geometry: geometry)
+            horizontalLineNode.position = SCNVector3(lineOffset, height * 0.5, 0)
+            node.addChildNode(horizontalLineNode)
+            
+            // Create vertical line node and set its position
+            let verticalLineNode = SCNNode(geometry: geometry)
+            verticalLineNode.eulerAngles = SCNVector3(0, 90.0.degreesToRadians, 0)
+            verticalLineNode.position = SCNVector3(0, height * 0.5, lineOffset)
+            node.addChildNode(verticalLineNode)
+        }
+        
+        // Assign dictionaries to properties
+        self.nodeToSquare = nodeToSquare
+        self.squareToPosition = squareToPosition
+    }
+}
+
+----- End of Board.swift -----
+
+----- Start of GameAI.swift -----
+//
+//  GameAI.swift
+//  AR-TicTacToe
+//
+//  Created by Bjarne Lundgren on 29/06/2017.
+//  Copyright © 2017 Bjarne Møller Lundgren. All rights reserved.
+//
+
+import Foundation
+
+private let MAX_ITERATIONS = 3
+private let SCORE_WINNING = 100
+
+/// this very simple Tic-Tac-Toe AI takes full advantage of the fact that the GameState
+/// is an immutable struct..
+struct GameAI {
+    let game:GameState
+    
+    /// simply returns list of squares that contain pieces belonging to player
+    /// or is empty (player == nil)
+    private func gameSquaresWhere(playerIs player:GamePlayer?) -> [GamePosition] {
+        var positions = [GamePosition]()
+        
+        for x in 0..<game.board.count {
+            for y in 0..<game.board[x].count {
+                if (player != nil && game.board[x][y] == player!.rawValue) ||
+                   (player == nil && game.board[x][y].isEmpty) {
+                    positions.append(GamePosition(x: x,
+                                                  y: y))
+                }
+            }
+        }
+        
+        return positions
+    }
+    
+    /// returns list of possible actions given the GameState
+    private func possibleActions() -> [GameAction] {
+        let emptySquares = gameSquaresWhere(playerIs: nil)
+        
+        // if in "put" mode then every possible action is to put a piece in any empty square
+        if game.mode == .put {
+            return emptySquares.map { GameAction.put(at: $0) }
+        }
+        
+        var actions = [GameAction]()
+        
+        // everyone of the currentPlayers pieces
+        for sourceSquare in gameSquaresWhere(playerIs: game.currentPlayer) {
+            // each can be moved to any empty square..
+            for destinationSquare in emptySquares {
+                actions.append(.move(from: sourceSquare,
+                                     to: destinationSquare))
+            }
+        }
+        
+        return actions
+    }
+    
+    /// returns list of SCORED possible actions given GameState and a player bias (player who we want to win)
+    /// Recursively simulates actions and the effect of actions..
+    private func scoredPossibleActions(playerBias:GamePlayer,
+                                       iterationCount:Int = 0) -> [(score:Int, action:GameAction)] {
+        var scoredActions = [(score:Int, action:GameAction)]()
+        
+        for action in possibleActions() {
+            var score = 0
+            guard let gameStatePostAction = game.perform(action: action) else { fatalError() }
+            
+            if let winner = gameStatePostAction.currentWinner {
+                let scoreForWin = SCORE_WINNING - iterationCount
+                if winner == playerBias {    // if playerBias wins it's positive score!
+                    score += scoreForWin
+                } else {    // otherwise big negative score!
+                    score -= scoreForWin * 2
+                }
+                
+            } else {
+                // add worst follow-up action score..
+                if iterationCount < MAX_ITERATIONS {
+                    let followUpActions = GameAI(game: gameStatePostAction).scoredPossibleActions(playerBias: playerBias,
+                                                                                                  iterationCount: iterationCount + 1)
+                    var minScoredAction:(score:Int, action:GameAction)? = nil
+                    for scoredAction in followUpActions {
+                        if minScoredAction == nil || minScoredAction!.score > scoredAction.score {
+                            minScoredAction = scoredAction
+                        }
+                    }
+                    score += minScoredAction!.score
+                }
+                
+            }
+            
+            scoredActions.append((score: score, action: action))
+        }
+        
+        return scoredActions
+    }
+    
+    var bestAction:GameAction {
+        var topScoredAction:(score:Int, action:GameAction)? = nil
+        for scoredAction in scoredPossibleActions(playerBias: game.currentPlayer) {
+            if topScoredAction == nil || topScoredAction!.score < scoredAction.score {
+                topScoredAction = scoredAction
+            }
+        }
+        return topScoredAction!.action
+    }
+}
+
+----- End of GameAI.swift -----
+
+----- Start of Dimensions.swift -----
+//
+//  Dimensions.swift
+//  TicTacToe
+//
+//  Created by Wentai Ye on Apr 24 2024
+//  Copyright © 2024 Wentai Ye. All rights reserved.
+//
+
+
+import Foundation
+import UIKit
+
+class Dimensions {
+    static let BOARD_GRID_HEIGHT:CGFloat = 0.5/14.0
+    static let BOARD_GRID_WIDTH:CGFloat = 0.2/18.0
+    static let SQUARE_SIZE:CGFloat = 4.0/18.0
+    static let FIGURE_RADIUS:CGFloat = 0.4/16.0
+    static let DRAG_LIFTOFF:CGFloat = 1.0/12.0
+}
+
+----- End of Dimensions.swift -----
+
+----- Start of Extensions.swift -----
+//
+//  Extensions.swift
+//  AR-TicTacToe
+//
+//  Created by Bjarne Møller Lundgren on 20/06/2017.
+//  Copyright © 2017 Bjarne Møller Lundgren. All rights reserved.
+//
+
+import Foundation
+import SceneKit
+
+extension FloatingPoint {
+    var degreesToRadians: Self { return self * .pi / 180 }
+    var radiansToDegrees: Self { return self * 180 / .pi }
+}
+
+extension SCNVector3 {
+    // from Apples demo APP
+    static func positionFromTransform(_ transform: matrix_float4x4) -> SCNVector3 {
+        return SCNVector3Make(transform.columns.3.x, transform.columns.3.y, transform.columns.3.z)
+    }
+}
+
+----- End of Extensions.swift -----
+
+----- Start of GameState.swift -----
+//
+//  GameState.swift
+//  AR-TicTacToe
+//
+//  Created by Bjarne Møller Lundgren on 20/06/2017.
+//  Copyright © 2017 Bjarne Møller Lundgren. All rights reserved.
+//
+
+import Foundation
+
+typealias GamePosition = (x:Int, y:Int)
+
+enum GamePlayerType:String {
+    case human = "human"
+    case ai = "ai"
+}
+
+enum GameMode:String {
+    case put = "put"
+    case move = "move"
+}
+
+enum GamePlayer:String {
+    case x = "x"
+    case o = "o"
+}
+
+/// we have made the game actions generic in order to make it easier to implement the AI
+enum GameAction {
+    case put(at:GamePosition)
+    case move(from:GamePosition, to:GamePosition)
+}
+
+/// our completely immutable implementation of Tic-Tac-Toe
+struct GameState {
+    let currentPlayer:GamePlayer
+    let mode:GameMode
+    let board:[[String]]
+    
+    /// When you create a new game (GameState) you get a certain default state, which you cant
+    /// modify in any way
+    init() {
+        self.init(currentPlayer: arc4random_uniform(2) == 0 ? .x : .o,  // random start player
+                  mode: .put,   // start mode is to put/drop pieces
+                  board: [["","",""],["","",""],["","",""]])    // board is empty
+    }
+    
+    /// this private init allows the perform func to return a new GameState
+    private init(currentPlayer:GamePlayer,
+                 mode:GameMode,
+                 board:[[String]]) {
+        self.currentPlayer = currentPlayer
+        self.mode = mode
+        self.board = board
+    }
+    
+    // perform action in the game, if successful returns new GameState
+    func perform(action:GameAction) -> GameState? {
+        switch action {
+        case .put(let at):
+            // are we in "put" mode and is the destination square empty?
+            guard case .put = mode,
+                  board[at.x][at.y] == "" else { return nil }
+            
+            // generate a new board state
+            var newBoard = board
+            newBoard[at.x][at.y] = currentPlayer.rawValue
+            
+            // determine how many pieces has been placed
+            let numberOfSquaresUsed = newBoard.reduce(0, {
+                return $1.reduce($0, { return $0 + ($1 != "" ? 1 : 0) })
+            })
+            
+            // generate new game state and return it
+            return GameState(currentPlayer: currentPlayer == .x ? .o : .x,
+                             mode: numberOfSquaresUsed >= 6 ? .move : .put,
+                             board: newBoard)
+            
+        case .move(let from, let to):
+            // are we in "move" mode and does the from piece match the current player
+            // and is the destination square empty?
+            guard case .move = mode,
+                  board[from.x][from.y] == currentPlayer.rawValue,
+                  board[to.x][to.y] == "" else { return nil }
+            
+            // generate a new board state
+            var newBoard = board
+            newBoard[from.x][from.y] = ""
+            newBoard[to.x][to.y] = currentPlayer.rawValue
+            
+            // generate new game state and return it
+            return GameState(currentPlayer: currentPlayer == .x ? .o : .x,
+                             mode: .move,
+                             board: newBoard)
+            
+        }
+    }
+    
+    // is there a winner?
+    var currentWinner:GamePlayer? {
+        get {
+            // checking lines
+            for l in 0..<3 {
+                if board[l][0] != "" &&
+                    board[l][0] == board[l][1] && board[l][0] == board[l][2] {
+                    // horizontal line victory!
+                    return GamePlayer(rawValue: board[l][0])
+                    
+                }
+                if board[0][l] != "" &&
+                    board[0][l] == board[1][l] && board[0][l] == board[2][l] {
+                    // vertical line victory!
+                    return GamePlayer(rawValue: board[0][l])
+                    
+                }
+            }
+            // accross check
+            if board[0][0] != "" &&
+                board[0][0] == board[1][1] && board[0][0] == board[2][2] {
+                // top left - bottom right victory!
+                return GamePlayer(rawValue: board[0][0])
+                
+            }
+            if board[0][2] != "" &&
+                board[0][2] == board[1][1] && board[0][2] == board[2][0] {
+                // top right - bottom left victory!
+                return GamePlayer(rawValue: board[0][2])
+                
+            }
+            return nil
+        }
+    }
+}
+
+----- End of GameState.swift -----
+
+----- Start of Figure.swift -----
+//
+//  Figure.swift
+//  AR-TicTacToe
+//
+//  Created by Bjarne Møller Lundgren on 20/06/2017.
+//  Copyright © 2017 Bjarne Møller Lundgren. All rights reserved.
+//
+
+import Foundation
+import SceneKit
+
+class Figure {
+    class func figure(for player:GamePlayer) -> SCNNode {
+        switch player {
+        case .x: return xFigure()
+        case .o: return oFigure()
+        }
+    }
+    
+    class func xFigure() -> SCNNode {
+        let geometry = SCNCylinder(radius: Dimensions.FIGURE_RADIUS,
+                                   height: Dimensions.SQUARE_SIZE)
+        geometry.firstMaterial?.lightingModel = .physicallyBased
+        geometry.firstMaterial?.diffuse.contents = UIImage(named: "Media.scnassets/scuffed-plastic6-alb.png")
+        geometry.firstMaterial?.roughness.contents = UIImage(named: "Media.scnassets/scuffed-plastic-rough.png")
+        geometry.firstMaterial?.metalness.contents = UIImage(named: "Media.scnassets/scuffed-plastic-metal.png")
+        geometry.firstMaterial?.normal.contents = UIImage(named: "Media.scnassets/scuffed-plastic-normal.png")
+        geometry.firstMaterial?.ambientOcclusion.contents = UIImage(named: "Media.scnassets/scuffed-plastic-ao.png")
+        
+        let cylinderNode1 = SCNNode(geometry: geometry)
+        cylinderNode1.eulerAngles = SCNVector3(-90.0.degreesToRadians, 45.0.degreesToRadians, 0)
+        cylinderNode1.position = SCNVector3(0, Dimensions.FIGURE_RADIUS * 0.5, 0)
+        
+        let cylinderNode2 = SCNNode(geometry: geometry)
+        cylinderNode2.eulerAngles = SCNVector3(-90.0.degreesToRadians, -45.0.degreesToRadians, 0)
+        cylinderNode2.position = SCNVector3(0, Dimensions.FIGURE_RADIUS * 0.5, 0)
+        
+        let node = SCNNode()
+        node.addChildNode(cylinderNode1)
+        node.addChildNode(cylinderNode2)
+        return node
+    }
+    
+    class func oFigure() -> SCNNode {
+        let geometry = SCNTorus(ringRadius: Dimensions.SQUARE_SIZE * 0.3,
+                                pipeRadius: Dimensions.FIGURE_RADIUS)
+        geometry.firstMaterial?.lightingModel = .physicallyBased
+        geometry.firstMaterial?.diffuse.contents = UIImage(named: "Media.scnassets/scuffed-plastic4-alb.png")
+        geometry.firstMaterial?.roughness.contents = UIImage(named: "Media.scnassets/scuffed-plastic-rough.png")
+        geometry.firstMaterial?.metalness.contents = UIImage(named: "Media.scnassets/scuffed-plastic-metal.png")
+        geometry.firstMaterial?.normal.contents = UIImage(named: "Media.scnassets/scuffed-plastic-normal.png")
+        geometry.firstMaterial?.ambientOcclusion.contents = UIImage(named: "Media.scnassets/scuffed-plastic-ao.png")
+        
+        // applying PBR: https://medium.com/@avihay/amazing-physically-based-rendering-using-the-new-ios-10-scenekit-2489e43f7021
+        
+        let torusNode = SCNNode(geometry: geometry)
+        torusNode.position = SCNVector3(0, Dimensions.FIGURE_RADIUS * 0.5, 0)
+        
+        let node = SCNNode()
+        node.addChildNode(torusNode)
+        return node
+    }
+}
+
+----- End of Figure.swift -----
+
+----- Start of AppDelegate.swift -----
+//
+//  AppDelegate.swift
+//  AR-TicTacToe
+//
+//  Created by Bjarne Møller Lundgren on 20/06/2017.
+//  Copyright © 2017 Bjarne Møller Lundgren. All rights reserved.
+//
+
+import UIKit
+
+@UIApplicationMain
+class AppDelegate: UIResponder, UIApplicationDelegate {
+
+    var window: UIWindow?
+
+
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        // Override point for customization after application launch.
+        return true
+    }
+
+    func applicationWillResignActive(_ application: UIApplication) {
+        // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
+        // Use this method to pause ongoing tasks, disable timers, and invalidate graphics rendering callbacks. Games should use this method to pause the game.
+    }
+
+    func applicationDidEnterBackground(_ application: UIApplication) {
+        // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
+        // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
+    }
+
+    func applicationWillEnterForeground(_ application: UIApplication) {
+        // Called as part of the transition from the background to the active state; here you can undo many of the changes made on entering the background.
+    }
+
+    func applicationDidBecomeActive(_ application: UIApplication) {
+        // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+    }
+
+    func applicationWillTerminate(_ application: UIApplication) {
+        // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
+    }
+
+
+}
+
+
+----- End of AppDelegate.swift -----
+

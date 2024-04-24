@@ -1,10 +1,11 @@
 //
 //  Dimensions.swift
-//  AR-TicTacToe
+//  TicTacToe
 //
-//  Created by Bjarne Møller Lundgren on 20/06/2017.
-//  Copyright © 2017 Bjarne Møller Lundgren. All rights reserved.
+//  Created by Wentai Ye on Apr 24 2024
+//  Copyright © 2024 Wentai Ye. All rights reserved.
 //
+
 
 import Foundation
 import UIKit
