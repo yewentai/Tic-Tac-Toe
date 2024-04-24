@@ -238,25 +238,37 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         }
     }
     
-    private func groundPositionFrom(location:CGPoint) -> SCNVector3? {
-        let results = sceneView.hitTest(location,
-                                        types: ARHitTestResult.ResultType.existingPlaneUsingExtent)
-        
-        guard results.count > 0 else { return nil }
-        
-        return SCNVector3.positionFromTransform(results[0].worldTransform)
-    }
     
-    private func anyPlaneFrom(location:CGPoint) -> (SCNNode, SCNVector3)? {
-        let results = sceneView.hitTest(location,
-                                        types: ARHitTestResult.ResultType.existingPlaneUsingExtent)
-        
-        guard results.count > 0,
-              let anchor = results[0].anchor,
-              let node = sceneView.node(for: anchor) else { return nil }
-        
-        return (node, SCNVector3.positionFromTransform(results[0].worldTransform))
+    private func groundPositionFrom(location: CGPoint) -> SCNVector3? {
+        guard let query = sceneView.raycastQuery(from: location, allowing: .estimatedPlane, alignment: .horizontal) else { return nil }
+        let results = sceneView.session.raycast(query)
+        if let result = results.first {
+            return SCNVector3.positionFromTransform(result.worldTransform)
+        }
+        return nil
     }
+
+    
+    private func anyPlaneFrom(location: CGPoint) -> (SCNNode, SCNVector3)? {
+        // Create a raycast query from the tap location, targeting the geometry of existing planes
+        guard let query = sceneView.raycastQuery(from: location, allowing: .existingPlaneGeometry, alignment: .horizontal) else { return nil }
+        
+        // Perform the raycast query
+        let results = sceneView.session.raycast(query)
+        
+        // Check if the raycast returned any results
+        if let firstResult = results.first, let anchor = firstResult.anchor as? ARPlaneAnchor {
+            // Obtain the SCNNode associated with the ARAnchor
+            if let node = sceneView.node(for: anchor) {
+                // Return the node and its position translated from the ARKit world transform
+                return (node, SCNVector3.positionFromTransform(firstResult.worldTransform))
+            }
+        }
+        
+        return nil
+    }
+
+
     
     private func squareFrom(location:CGPoint) -> ((Int, Int), SCNNode)? {
         guard let _ = currentPlane else { return nil }
