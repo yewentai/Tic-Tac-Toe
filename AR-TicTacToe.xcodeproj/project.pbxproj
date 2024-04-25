@@ -17,7 +17,6 @@
 		0633C8DB1EF910CB00F6A311 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0633C8DA1EF910CB00F6A311 /* Extensions.swift */; };
 		0633C8DD1EF910D900F6A311 /* Board.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0633C8DC1EF910D900F6A311 /* Board.swift */; };
 		70065C021F05A98C00F3E801 /* GameAI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70065C011F05A98C00F3E801 /* GameAI.swift */; };
-		74A069032BD9333A00E2471A /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 74A069022BD9333A00E2471A /* Main.storyboard */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -35,7 +34,7 @@
 		70065C001F05A00100F3E801 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		70065C011F05A98C00F3E801 /* GameAI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameAI.swift; sourceTree = "<group>"; };
 		708A9A921EFEF94700D010B9 /* media_sources.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = media_sources.txt; sourceTree = "<group>"; };
-		74A069022BD9333A00E2471A /* Main.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = Main.storyboard; path = "/Users/yewentai/Codes/Tic-Tac-Toe/AR-TicTacToe/../../../.Trash/Main.storyboard"; sourceTree = "<absolute>"; };
+		748A12342BDA8B8600AEAA2E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = "AR-TicTacToe/Base.lproj/Main.storyboard"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -72,6 +71,7 @@
 				0633C8BE1EF90F6600F6A311 /* AppDelegate.swift */,
 				0633C8C01EF90F6600F6A311 /* ViewController.swift */,
 				0633C8C51EF90F6600F6A311 /* Assets.xcassets */,
+				748A12332BDA8B8600AEAA2E /* Main.storyboard */,
 				0633C8C71EF90F6600F6A311 /* LaunchScreen.storyboard */,
 				0633C8CA1EF90F6600F6A311 /* Info.plist */,
 				0633C8D41EF9104400F6A311 /* Dimensions.swift */,
@@ -81,7 +81,6 @@
 				0633C8DA1EF910CB00F6A311 /* Extensions.swift */,
 				0633C8DC1EF910D900F6A311 /* Board.swift */,
 				708A9A921EFEF94700D010B9 /* media_sources.txt */,
-				74A069022BD9333A00E2471A /* Main.storyboard */,
 			);
 			path = "AR-TicTacToe";
 			sourceTree = "<group>";
@@ -146,7 +145,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				74A069032BD9333A00E2471A /* Main.storyboard in Resources */,
 				0633C8C91EF90F6600F6A311 /* LaunchScreen.storyboard in Resources */,
 				0633C8C61EF90F6600F6A311 /* Assets.xcassets in Resources */,
 			);
@@ -179,6 +177,14 @@
 				0633C8C81EF90F6600F6A311 /* Base */,
 			);
 			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+		748A12332BDA8B8600AEAA2E /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				748A12342BDA8B8600AEAA2E /* Base */,
+			);
+			name = Main.storyboard;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
