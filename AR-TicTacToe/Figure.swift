@@ -1,6 +1,6 @@
 //
 //  Figure.swift
-
+//
 
 import Foundation
 import SceneKit
