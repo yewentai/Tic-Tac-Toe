@@ -9,14 +9,18 @@
 import UIKit
 import SceneKit
 import ARKit
+import CoreML
+import Vision
 
-class ViewController: UIViewController, ARSCNViewDelegate {
+class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate {
     
     // UI
     @IBOutlet weak var planeSearchLabel: UILabel!
     @IBOutlet weak var planeSearchOverlay: UIView!
     @IBOutlet weak var gameStateLabel: UILabel!
     @IBAction func didTapStartOver(_ sender: Any) { reset() }
+    
+    /** create an ARSCNView and for view AR view assignment and loading in ViewController */
     @IBOutlet weak var sceneView: ARSCNView!
     
     // State
@@ -78,10 +82,12 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     var recentVirtualObjectDistances = [CGFloat]()
     
     override func viewDidLoad() {
+        /** load the view */
         super.viewDidLoad()
         
         game = GameState()  // create new game
-        
+
+        // The delegate is used to receive ARAnchors when they are detected.
         sceneView.delegate = self
         //sceneView.showsStatistics = true
         //sceneView.antialiasingMode = .multisampling4X
@@ -99,7 +105,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         pan.addTarget(self, action: #selector(didPan))
         sceneView.addGestureRecognizer(pan)
     }
-    
+
     // from APples app
     func enableEnvironmentMapWithIntensity(_ intensity: CGFloat) {
         if sceneView.scene.lightingEnvironment.contents == nil {
@@ -110,14 +116,28 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         sceneView.scene.lightingEnvironment.intensity = intensity
     }
     
+    var previewView = UIImageView()
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
+        /** create a session configuration */
         let configuration = ARWorldTrackingConfiguration()
+        
+        // Enable Horizontal plane detection
         configuration.planeDetection = .horizontal
         configuration.isLightEstimationEnabled = true
         
+        // We want to receive the frames from the video
+        sceneView.session.delegate = self
+        
         sceneView.session.run(configuration)
+        
+        /** subview for hand gesture */
+        sceneView.addSubview(previewView)
+        
+        previewView.translatesAutoresizingMaskIntoConstraints = false
+        previewView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        previewView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -272,7 +292,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     
     private func squareFrom(location:CGPoint) -> ((Int, Int), SCNNode)? {
         guard let _ = currentPlane else { return nil }
-        
+        // To transform our 2D Screen coordinates to 3D screen coordinates we use hitTest function
         let hitResults = sceneView.hitTest(location, options: [SCNHitTestOption.firstFoundOnly: false,
                                                                SCNHitTestOption.rootNode:       board.node])
         
@@ -463,7 +483,73 @@ class ViewController: UIViewController, ARSCNViewDelegate {
                         completionHandler: completionHandler)
     }
     
+    // MARK: - ARSessionDelegate
     
+    var currentBuffer: CVPixelBuffer?
+    
+    func session(_ session: ARSession, didUpdate frame: ARFrame) {
+        // This is where we will analyse our frame
+        // read the capturedImage from ARFrame (CVPixelBuffer)
+        // return if currentBuffer is not nil or the tracking state of camera is not normal
+        guard currentBuffer == nil, case .normal = frame.camera.trackingState else {
+            // currentBuffer being nil indicates that Core ML request has not finished processing yet and we shouldn’t start another.
+            return
+        }
+        // Retain the image buffer for Vision processing.
+        currentBuffer = frame.capturedImage
+
+        startDetection()
+    }
+
+    // MARK: - Private functions
+
+    let handDetector = HandDetector()
+    let touchNode = TouchNode()
+
+    private func startDetection() {
+        // To avoid force unwrap in VNImageRequestHandler
+        guard let buffer = currentBuffer else { return }
+
+        handDetector.performDetection(inputBuffer: buffer) { outputBuffer, _ in
+            // Here we are on a background thread
+            var previewImage: UIImage?
+            var normalizedFingerTip: CGPoint?
+
+            defer {
+                DispatchQueue.main.async {
+                    self.previewView.image = previewImage
+                    // Release currentBuffer when finished to allow processing next frame
+                    self.currentBuffer = nil
+                    
+                    self.touchNode.isHidden = true
+                    
+                    guard let tipPoint = normalizedFingerTip else {
+                        return
+                    }
+                    // We use a coreVideo function to get the image coordinate from the normalized point
+                    let imageFingerPoint = VNImagePointForNormalizedPoint(tipPoint, Int(self.view.bounds.size.width), Int(self.view.bounds.size.height))
+
+                    // And here again we need to hitTest to translate from 2D coordinates to 3D coordinates
+                    let hitTestResults = self.sceneView.hitTest(imageFingerPoint, types: .existingPlaneUsingExtent)
+                    guard let hitTestResult = hitTestResults.first else { return }
+
+                    // We position our touchNode slighlty above the plane (1cm).
+                    self.touchNode.simdTransform = hitTestResult.worldTransform
+                    self.touchNode.position.y += 0.01
+                    self.touchNode.isHidden = false
+                }
+            }
+
+            guard let outBuffer = outputBuffer else {
+                return
+            }
+
+            // Create UIImage from CVPixelBuffer
+            previewImage = UIImage(ciImage: CIImage(cvPixelBuffer: outBuffer))
+
+            normalizedFingerTip = outBuffer.searchTopPoint()
+        }
+    }
     // MARK: - ARSCNViewDelegate
     
     func renderer(_ renderer: SCNSceneRenderer, updateAtTime time: TimeInterval) {
@@ -484,6 +570,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     
     // did at plane(?)
     func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
+        // notified when the ARSCNView detects an ARAnchor with its assigned SCNNode
         planeCount += 1
     }
     
