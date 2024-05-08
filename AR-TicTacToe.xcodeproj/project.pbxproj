@@ -38,6 +38,7 @@
 		74A069022BD9333A00E2471A /* Main.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = Main.storyboard; path = ../../../.Trash/Main.storyboard; sourceTree = "<group>"; };
 		BBCC033C2BD944730031CB5C /* code_architecture.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = code_architecture.md; sourceTree = "<group>"; };
 		BBCC033D2BD947FE0031CB5C /* hand_tracking_plan.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = hand_tracking_plan.md; sourceTree = "<group>"; };
+		BBCC033E2BD9647B0031CB5C /* hand_detection_tracking.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = hand_detection_tracking.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -54,6 +55,7 @@
 		0633C8B21EF90F6600F6A311 = {
 			isa = PBXGroup;
 			children = (
+				BBCC033E2BD9647B0031CB5C /* hand_detection_tracking.md */,
 				BBCC033D2BD947FE0031CB5C /* hand_tracking_plan.md */,
 				BBCC033C2BD944730031CB5C /* code_architecture.md */,
 				70065C001F05A00100F3E801 /* README.md */,
