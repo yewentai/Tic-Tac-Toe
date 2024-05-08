@@ -22,6 +22,7 @@
 		BB9455962BEC0C840078F605 /* TouchNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB9455952BEC0C840078F605 /* TouchNode.swift */; };
 		BB9455992BEC15CF0078F605 /* HandModel.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = BB9455972BEC15CE0078F605 /* HandModel.mlmodel */; };
 		BB94559A2BEC15CF0078F605 /* HandGesture.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = BB9455982BEC15CF0078F605 /* HandGesture.mlmodel */; };
+		BB94559E2BEC1CF80078F605 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = BB94559D2BEC1CF80078F605 /* Main.storyboard */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -44,6 +45,7 @@
 		BB9455952BEC0C840078F605 /* TouchNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchNode.swift; sourceTree = "<group>"; };
 		BB9455972BEC15CE0078F605 /* HandModel.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = HandModel.mlmodel; sourceTree = "<group>"; };
 		BB9455982BEC15CF0078F605 /* HandGesture.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = HandGesture.mlmodel; sourceTree = "<group>"; };
+		BB94559D2BEC1CF80078F605 /* Main.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = Main.storyboard; sourceTree = "<group>"; };
 		BBCC033C2BD944730031CB5C /* code_architecture.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = code_architecture.md; sourceTree = "<group>"; };
 		BBCC033D2BD947FE0031CB5C /* hand_tracking_plan.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = hand_tracking_plan.md; sourceTree = "<group>"; };
 		BBCC033E2BD9647B0031CB5C /* hand_detection_tracking.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = hand_detection_tracking.md; sourceTree = "<group>"; };
@@ -100,6 +102,7 @@
 				708A9A921EFEF94700D010B9 /* media_sources.txt */,
 				BB9455982BEC15CF0078F605 /* HandGesture.mlmodel */,
 				BB9455972BEC15CE0078F605 /* HandModel.mlmodel */,
+				BB94559D2BEC1CF80078F605 /* Main.storyboard */,
 			);
 			path = "AR-TicTacToe";
 			sourceTree = "<group>";
@@ -164,6 +167,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BB94559E2BEC1CF80078F605 /* Main.storyboard in Resources */,
 				0633C8C91EF90F6600F6A311 /* LaunchScreen.storyboard in Resources */,
 				0633C8C61EF90F6600F6A311 /* Assets.xcassets in Resources */,
 			);
