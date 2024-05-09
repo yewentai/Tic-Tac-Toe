@@ -106,8 +106,8 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate {
         sceneView.addGestureRecognizer(pan)
     }
 
-    // from APples app
-    func enableEnvironmentMapWithIntensity(_ intensity: CGFloat) {
+
+    private func enableEnvironmentMapWithIntensity(_ intensity: CGFloat) {
         if sceneView.scene.lightingEnvironment.contents == nil {
             if let environmentMap = UIImage(named: "Media.scnassets/environment_blur.exr") {
                 sceneView.scene.lightingEnvironment.contents = environmentMap
@@ -315,6 +315,37 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate {
             self.draggingFrom = nil
             self.draggingFromPosition = nil
         }
+    }
+    
+    private func moveObject( at point: CGPoint){
+        
+        // Compute near & far points
+        let nearVector = SCNVector3(x: Float(point.x), y: Float(point.y), z: 0)
+        let nearScenePoint = sceneView!.unprojectPoint(nearVector)
+        
+        let farVector = SCNVector3(x: Float(point.x), y: Float(point.y), z: 1 )
+        let farScenePoint = sceneView!.unprojectPoint(farVector)
+        
+        // Compute view vector
+        let viewVector = SCNVector3(x: Float(farScenePoint.x - nearScenePoint.x),
+                                    y: Float(farScenePoint.y - nearScenePoint.y),
+                                    z: Float(farScenePoint.z - nearScenePoint.z))
+        
+        // Normalize view vector
+        let vectorLength = sqrt(viewVector.x*viewVector.x + viewVector.y*viewVector.y + viewVector.z*viewVector.z)
+        let normalizedViewVector = SCNVector3(x: viewVector.x/vectorLength, y: viewVector.y/vectorLength, z: viewVector.z/vectorLength)
+        
+        // Scale normalized vector to find scene point
+        let scale : Float = Float( 1 / Float( previewView.bounds.size.width ) ) * 5000
+        
+        let scenePoint = SCNVector3(x: normalizedViewVector.x*scale,
+                                    y: normalizedViewVector.y*scale,
+                                    z: normalizedViewVector.z*scale )
+        
+        
+        
+        touchNode.position = scenePoint
+        
     }
     
     // MARK: - Gestures

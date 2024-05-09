@@ -17,6 +17,11 @@
 		0633C8DB1EF910CB00F6A311 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0633C8DA1EF910CB00F6A311 /* Extensions.swift */; };
 		0633C8DD1EF910D900F6A311 /* Board.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0633C8DC1EF910D900F6A311 /* Board.swift */; };
 		70065C021F05A98C00F3E801 /* GameAI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70065C011F05A98C00F3E801 /* GameAI.swift */; };
+		BB3F22EA2BED1F5E002D2E0A /* BodyTracking in Frameworks */ = {isa = PBXBuildFile; productRef = BB3F22E92BED1F5E002D2E0A /* BodyTracking */; };
+		BB3F22EC2BED1F5E002D2E0A /* FaceTracking in Frameworks */ = {isa = PBXBuildFile; productRef = BB3F22EB2BED1F5E002D2E0A /* FaceTracking */; };
+		BB3F22EE2BED1F5E002D2E0A /* HandTracking in Frameworks */ = {isa = PBXBuildFile; productRef = BB3F22ED2BED1F5E002D2E0A /* HandTracking */; };
+		BB3F22F02BED2013002D2E0A /* Interface.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB3F22EF2BED2013002D2E0A /* Interface.swift */; };
+		BB3F22F22BED299A002D2E0A /* HandGestureDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB3F22F12BED299A002D2E0A /* HandGestureDetector.swift */; };
 		BB9455922BEBFFA20078F605 /* HandDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB9455912BEBFFA20078F605 /* HandDetector.swift */; };
 		BB9455942BEC0B9C0078F605 /* CVPixelBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB9455932BEC0B9C0078F605 /* CVPixelBuffer.swift */; };
 		BB9455962BEC0C840078F605 /* TouchNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB9455952BEC0C840078F605 /* TouchNode.swift */; };
@@ -40,6 +45,8 @@
 		70065C001F05A00100F3E801 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		70065C011F05A98C00F3E801 /* GameAI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameAI.swift; sourceTree = "<group>"; };
 		708A9A921EFEF94700D010B9 /* media_sources.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = media_sources.txt; sourceTree = "<group>"; };
+		BB3F22EF2BED2013002D2E0A /* Interface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Interface.swift; sourceTree = "<group>"; };
+		BB3F22F12BED299A002D2E0A /* HandGestureDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HandGestureDetector.swift; sourceTree = "<group>"; };
 		BB9455912BEBFFA20078F605 /* HandDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HandDetector.swift; sourceTree = "<group>"; };
 		BB9455932BEC0B9C0078F605 /* CVPixelBuffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CVPixelBuffer.swift; sourceTree = "<group>"; };
 		BB9455952BEC0C840078F605 /* TouchNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchNode.swift; sourceTree = "<group>"; };
@@ -56,6 +63,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BB3F22EC2BED1F5E002D2E0A /* FaceTracking in Frameworks */,
+				BB3F22EA2BED1F5E002D2E0A /* BodyTracking in Frameworks */,
+				BB3F22EE2BED1F5E002D2E0A /* HandTracking in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -88,6 +98,7 @@
 				BB9455952BEC0C840078F605 /* TouchNode.swift */,
 				BB9455932BEC0B9C0078F605 /* CVPixelBuffer.swift */,
 				BB9455912BEBFFA20078F605 /* HandDetector.swift */,
+				BB3F22F12BED299A002D2E0A /* HandGestureDetector.swift */,
 				0633C8BE1EF90F6600F6A311 /* AppDelegate.swift */,
 				0633C8C01EF90F6600F6A311 /* ViewController.swift */,
 				0633C8C51EF90F6600F6A311 /* Assets.xcassets */,
@@ -103,6 +114,7 @@
 				BB9455982BEC15CF0078F605 /* HandGesture.mlmodel */,
 				BB9455972BEC15CE0078F605 /* HandModel.mlmodel */,
 				BB94559D2BEC1CF80078F605 /* Main.storyboard */,
+				BB3F22EF2BED2013002D2E0A /* Interface.swift */,
 			);
 			path = "AR-TicTacToe";
 			sourceTree = "<group>";
@@ -123,6 +135,11 @@
 			dependencies = (
 			);
 			name = "AR-TicTacToe";
+			packageProductDependencies = (
+				BB3F22E92BED1F5E002D2E0A /* BodyTracking */,
+				BB3F22EB2BED1F5E002D2E0A /* FaceTracking */,
+				BB3F22ED2BED1F5E002D2E0A /* HandTracking */,
+			);
 			productName = "AR-TicTacToe";
 			productReference = 0633C8BB1EF90F6600F6A311 /* AR-TicTacToe.app */;
 			productType = "com.apple.product-type.application";
@@ -153,6 +170,9 @@
 				Base,
 			);
 			mainGroup = 0633C8B21EF90F6600F6A311;
+			packageReferences = (
+				BB3F22E82BED1F5E002D2E0A /* XCRemoteSwiftPackageReference "BodyTracking" */,
+			);
 			productRefGroup = 0633C8BC1EF90F6600F6A311 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -183,6 +203,7 @@
 				0633C8C11EF90F6600F6A311 /* ViewController.swift in Sources */,
 				0633C8DB1EF910CB00F6A311 /* Extensions.swift in Sources */,
 				BB94559A2BEC15CF0078F605 /* HandGesture.mlmodel in Sources */,
+				BB3F22F02BED2013002D2E0A /* Interface.swift in Sources */,
 				0633C8D71EF9107600F6A311 /* Figure.swift in Sources */,
 				70065C021F05A98C00F3E801 /* GameAI.swift in Sources */,
 				BB9455962BEC0C840078F605 /* TouchNode.swift in Sources */,
@@ -193,6 +214,7 @@
 				BB9455992BEC15CF0078F605 /* HandModel.mlmodel in Sources */,
 				BB9455922BEBFFA20078F605 /* HandDetector.swift in Sources */,
 				0633C8D51EF9104400F6A311 /* Dimensions.swift in Sources */,
+				BB3F22F22BED299A002D2E0A /* HandGestureDetector.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -336,14 +358,14 @@
 				INFOPLIST_FILE = "AR-TicTacToe/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "TicTacoToe Beta";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.puzzle-games";
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = jeffee;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -358,14 +380,14 @@
 				INFOPLIST_FILE = "AR-TicTacToe/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = TicTacoToe;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.puzzle-games";
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = jeffee;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -394,6 +416,35 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		BB3F22E82BED1F5E002D2E0A /* XCRemoteSwiftPackageReference "BodyTracking" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Reality-Dev/BodyTracking";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.32;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		BB3F22E92BED1F5E002D2E0A /* BodyTracking */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BB3F22E82BED1F5E002D2E0A /* XCRemoteSwiftPackageReference "BodyTracking" */;
+			productName = BodyTracking;
+		};
+		BB3F22EB2BED1F5E002D2E0A /* FaceTracking */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BB3F22E82BED1F5E002D2E0A /* XCRemoteSwiftPackageReference "BodyTracking" */;
+			productName = FaceTracking;
+		};
+		BB3F22ED2BED1F5E002D2E0A /* HandTracking */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BB3F22E82BED1F5E002D2E0A /* XCRemoteSwiftPackageReference "BodyTracking" */;
+			productName = HandTracking;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 0633C8B31EF90F6600F6A311 /* Project object */;
 }
