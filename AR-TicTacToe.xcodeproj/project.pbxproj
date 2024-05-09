@@ -22,6 +22,7 @@
 		BB3F22EE2BED1F5E002D2E0A /* HandTracking in Frameworks */ = {isa = PBXBuildFile; productRef = BB3F22ED2BED1F5E002D2E0A /* HandTracking */; };
 		BB3F22F02BED2013002D2E0A /* Interface.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB3F22EF2BED2013002D2E0A /* Interface.swift */; };
 		BB3F22F22BED299A002D2E0A /* HandGestureDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB3F22F12BED299A002D2E0A /* HandGestureDetector.swift */; };
+		BB3F22F42BED3949002D2E0A /* ARViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB3F22F32BED3949002D2E0A /* ARViewController.swift */; };
 		BB9455922BEBFFA20078F605 /* HandDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB9455912BEBFFA20078F605 /* HandDetector.swift */; };
 		BB9455942BEC0B9C0078F605 /* CVPixelBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB9455932BEC0B9C0078F605 /* CVPixelBuffer.swift */; };
 		BB9455962BEC0C840078F605 /* TouchNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB9455952BEC0C840078F605 /* TouchNode.swift */; };
@@ -47,6 +48,7 @@
 		708A9A921EFEF94700D010B9 /* media_sources.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = media_sources.txt; sourceTree = "<group>"; };
 		BB3F22EF2BED2013002D2E0A /* Interface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Interface.swift; sourceTree = "<group>"; };
 		BB3F22F12BED299A002D2E0A /* HandGestureDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HandGestureDetector.swift; sourceTree = "<group>"; };
+		BB3F22F32BED3949002D2E0A /* ARViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ARViewController.swift; sourceTree = "<group>"; };
 		BB9455912BEBFFA20078F605 /* HandDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HandDetector.swift; sourceTree = "<group>"; };
 		BB9455932BEC0B9C0078F605 /* CVPixelBuffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CVPixelBuffer.swift; sourceTree = "<group>"; };
 		BB9455952BEC0C840078F605 /* TouchNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchNode.swift; sourceTree = "<group>"; };
@@ -115,6 +117,7 @@
 				BB9455972BEC15CE0078F605 /* HandModel.mlmodel */,
 				BB94559D2BEC1CF80078F605 /* Main.storyboard */,
 				BB3F22EF2BED2013002D2E0A /* Interface.swift */,
+				BB3F22F32BED3949002D2E0A /* ARViewController.swift */,
 			);
 			path = "AR-TicTacToe";
 			sourceTree = "<group>";
@@ -203,6 +206,7 @@
 				0633C8C11EF90F6600F6A311 /* ViewController.swift in Sources */,
 				0633C8DB1EF910CB00F6A311 /* Extensions.swift in Sources */,
 				BB94559A2BEC15CF0078F605 /* HandGesture.mlmodel in Sources */,
+				BB3F22F42BED3949002D2E0A /* ARViewController.swift in Sources */,
 				BB3F22F02BED2013002D2E0A /* Interface.swift in Sources */,
 				0633C8D71EF9107600F6A311 /* Figure.swift in Sources */,
 				70065C021F05A98C00F3E801 /* GameAI.swift in Sources */,

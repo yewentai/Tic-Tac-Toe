@@ -88,3 +88,24 @@ class Board {
         self.squareToPosition = squareToPosition
     }
 }
+
+extension Board {
+    func positionToGamePosition(_ position: SCNVector3) -> GamePosition? {
+        /** Mapping 3D Scene Coordinates to Game Grid Positions */
+        // Assuming the center of the board is at (0,0,0) and spans equally in all directions
+        let boardCenter = node.position
+        let relativeX = position.x - boardCenter.x
+        let relativeZ = position.z - boardCenter.z
+
+        // Calculate which square the position corresponds to
+        let columnIndex = Int(floor((relativeX + Dimensions.SQUARE_SIZE * 1.5) / Dimensions.SQUARE_SIZE))
+        let rowIndex = Int(floor((relativeZ + Dimensions.SQUARE_SIZE * 1.5) / Dimensions.SQUARE_SIZE))
+
+        // Validate if the calculated indices are within the bounds of the board
+        if rowIndex >= 0, rowIndex < 3, columnIndex >= 0, columnIndex < 3 {
+            return (rowIndex, columnIndex)
+        }
+        
+        return nil // Return nil if the position is outside the game board
+    }
+}

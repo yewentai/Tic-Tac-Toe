@@ -89,10 +89,6 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate {
 
         // The delegate is used to receive ARAnchors when they are detected.
         sceneView.delegate = self
-        //sceneView.showsStatistics = true
-        //sceneView.antialiasingMode = .multisampling4X
-        //sceneView.preferredFramesPerSecond = 60
-        //sceneView.contentScaleFactor = 1.3
         sceneView.antialiasingMode = .multisampling4X
         
         sceneView.automaticallyUpdatesLighting = false
