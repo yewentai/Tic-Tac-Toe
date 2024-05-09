@@ -442,32 +442,17 @@ class ARViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate {
             // Ensure the hit node is part of the game board
             if let gamePosition = board.nodeToSquare[hitResult.node] {
                 // Now use the actual GamePosition to simulate the game action
-                movePiece(from: gamePosition, to: gamePosition) // Modify as needed
+                movePiece(from: gamePosition, to: gamePosition) {
+                    // After moving the piece, update the game state and check if it's the AI's turn
+                    if let newGameState = self.game.perform(action: .move(from: gamePosition, to: gamePosition)) {
+                        self.updateGameState(with: newGameState)
+                    }
+                }
             }
         }
     }
-
-    private func findNodeToManipulate(from point: SCNVector3) -> SCNNode? {
-        let hitResults = sceneView.hitTest(CGPoint(x: CGFloat(point.x), y: CGFloat(point.y)), options: nil)
-        return hitResults.first?.node
-    }
-
     
     // MARK: - ARSCNViewDelegate
-    
-    func renderer(_ renderer: SCNSceneRenderer, updateAtTime time: TimeInterval) {
-        // from apples app
-        DispatchQueue.main.async {
-            // If light estimation is enabled, update the intensity of the model's lights and the environment map
-            if let lightEstimate = self.sceneView.session.currentFrame?.lightEstimate {
-                // Apple divived the ambientIntensity by 40, I find that, atleast with the materials used
-                // here that it's a big too bright, so I increased to to 50..
-                self.enableEnvironmentMapWithIntensity(lightEstimate.ambientIntensity / 50)
-            } else {
-                self.enableEnvironmentMapWithIntensity(25)
-            }
-        }
-    }
     
     // did at plane(?)
     func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
@@ -494,6 +479,18 @@ class ARViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate {
         
         if planeCount > 0 {
             planeCount -= 1
+        }
+    }
+    
+    // Update the scene at each frame
+    func renderer(_ renderer: SCNSceneRenderer, updateAtTime time: TimeInterval) {
+        DispatchQueue.main.async {
+            // update lighting or other continuous effects here.
+            if let lightEstimate = self.sceneView.session.currentFrame?.lightEstimate {
+                self.enableEnvironmentMapWithIntensity(lightEstimate.ambientIntensity / 50)
+            } else {
+                self.enableEnvironmentMapWithIntensity(25)
+            }
         }
     }
     
