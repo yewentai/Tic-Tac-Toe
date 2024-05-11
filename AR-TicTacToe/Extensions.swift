@@ -1,9 +1,5 @@
 //
 //  Extensions.swift
-//  AR-TicTacToe
-//
-//  Created by Bjarne Møller Lundgren on 20/06/2017.
-//  Copyright © 2017 Bjarne Møller Lundgren. All rights reserved.
 //
 
 import Foundation
