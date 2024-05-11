@@ -15,28 +15,22 @@ public class HandDetector {
     // Creates a dedicated queue for processing vision-related tasks to avoid blocking the UI thread.
     private let visionQueue = DispatchQueue(label: "com.jeffee.visionqueue")
 
-    // Lazy initialization of a CoreML model prediction request, allowing the model to be loaded only once at the first use.
     private lazy var predictionRequest: VNCoreMLRequest = {
         do {
-            // Attempts to load the pre-trained CoreML model.
             let model = try VNCoreMLModel(for: HandModel().model)
             let request = VNCoreMLRequest(model: model) { request, error in
                 if let error = error {
-                    // Logs an error if the model fails to be set up correctly.
                     print("Error during model setup: \(error.localizedDescription)")
                 }
             }
-
-            // Configure the request to scale images to fit the expected input size of the model without cropping.
             request.imageCropAndScaleOption = .scaleFill
             return request
         } catch {
-            // Instead of crashing the app, handle the error gracefully.
             print("Failed to load Vision ML model: \(error)")
-            // Optionally, you can notify the user or retry loading the model here.
-            return nil
+            fatalError("Failed to load the ML model.")
         }
     }()
+
 
     // MARK: - Public functions
 

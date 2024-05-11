@@ -26,141 +26,6 @@
 		BB94559E2BEC1CF80078F605 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = BB94559D2BEC1CF80078F605 /* Main.storyboard */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXBuildRule section */
-		BB47F2EA2BF02FD80080A7EF /* PBXBuildRule */ = {
-			isa = PBXBuildRule;
-			compilerSpec = com.apple.compilers.proxy.script;
-			fileType = file.rcproject;
-			inputFiles = (
-			);
-			isEditable = 1;
-			outputFiles = (
-			);
-			script = "# rctool\n";
-		};
-		BB47F2EB2BF02FEB0080A7EF /* PBXBuildRule */ = {
-			isa = PBXBuildRule;
-			compilerSpec = com.apple.compilers.proxy.script;
-			fileType = folder.mlpackage;
-			inputFiles = (
-			);
-			isEditable = 1;
-			outputFiles = (
-			);
-			script = "# coremlc\n";
-		};
-		BB47F2EC2BF030000080A7EF /* PBXBuildRule */ = {
-			isa = PBXBuildRule;
-			compilerSpec = com.apple.compilers.proxy.script;
-			fileType = folder.rkassets;
-			inputFiles = (
-			);
-			isEditable = 1;
-			outputFiles = (
-			);
-			script = "# realitytool\n";
-		};
-		BB47F2ED2BF030070080A7EF /* PBXBuildRule */ = {
-			isa = PBXBuildRule;
-			compilerSpec = com.apple.compilers.proxy.script;
-			fileType = file.rcproject;
-			inputFiles = (
-			);
-			isEditable = 1;
-			outputFiles = (
-			);
-			script = "# rctool\n";
-		};
-		BB47F2EE2BF0300B0080A7EF /* PBXBuildRule */ = {
-			isa = PBXBuildRule;
-			compilerSpec = com.apple.compilers.proxy.script;
-			fileType = file.rcproject;
-			inputFiles = (
-			);
-			isEditable = 1;
-			outputFiles = (
-			);
-			script = "# rctool\n";
-		};
-		BB47F2EF2BF0300F0080A7EF /* PBXBuildRule */ = {
-			isa = PBXBuildRule;
-			compilerSpec = com.apple.compilers.proxy.script;
-			fileType = file.rcproject;
-			inputFiles = (
-			);
-			isEditable = 1;
-			outputFiles = (
-			);
-			script = "# rctool\n";
-		};
-		BB47F2F02BF030120080A7EF /* PBXBuildRule */ = {
-			isa = PBXBuildRule;
-			compilerSpec = com.apple.compilers.proxy.script;
-			fileType = file.rcproject;
-			inputFiles = (
-			);
-			isEditable = 1;
-			outputFiles = (
-			);
-			script = "# rctool\n";
-		};
-		BB47F2F12BF030280080A7EF /* PBXBuildRule */ = {
-			isa = PBXBuildRule;
-			compilerSpec = com.apple.compilers.proxy.script;
-			fileType = file.mlmodel;
-			inputFiles = (
-			);
-			isEditable = 1;
-			outputFiles = (
-			);
-			script = "# coremlc\n";
-		};
-		BB47F2F22BF030370080A7EF /* PBXBuildRule */ = {
-			isa = PBXBuildRule;
-			compilerSpec = com.apple.compilers.proxy.script;
-			fileType = file.mlmodel;
-			inputFiles = (
-			);
-			isEditable = 1;
-			outputFiles = (
-			);
-			script = "# coremlc\n";
-		};
-		BB47F2F32BF0303D0080A7EF /* PBXBuildRule */ = {
-			isa = PBXBuildRule;
-			compilerSpec = com.apple.compilers.proxy.script;
-			fileType = text.xml.dae;
-			inputFiles = (
-			);
-			isEditable = 1;
-			outputFiles = (
-			);
-			script = "# scntool\n";
-		};
-		BB47F2F42BF0303F0080A7EF /* PBXBuildRule */ = {
-			isa = PBXBuildRule;
-			compilerSpec = com.apple.compilers.proxy.script;
-			fileType = folder.mlpackage;
-			inputFiles = (
-			);
-			isEditable = 1;
-			outputFiles = (
-			);
-			script = "# coremlc\n";
-		};
-		BB47F2F52BF030420080A7EF /* PBXBuildRule */ = {
-			isa = PBXBuildRule;
-			compilerSpec = com.apple.compilers.proxy.script;
-			fileType = file.mlmodel;
-			inputFiles = (
-			);
-			isEditable = 1;
-			outputFiles = (
-			);
-			script = "# coremlc\n";
-		};
-/* End PBXBuildRule section */
-
 /* Begin PBXFileReference section */
 		0633C8BB1EF90F6600F6A311 /* AR-TicTacToe.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "AR-TicTacToe.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0633C8BE1EF90F6600F6A311 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -257,18 +122,6 @@
 				0633C8B91EF90F6600F6A311 /* Resources */,
 			);
 			buildRules = (
-				BB47F2F52BF030420080A7EF /* PBXBuildRule */,
-				BB47F2F42BF0303F0080A7EF /* PBXBuildRule */,
-				BB47F2F32BF0303D0080A7EF /* PBXBuildRule */,
-				BB47F2F22BF030370080A7EF /* PBXBuildRule */,
-				BB47F2F12BF030280080A7EF /* PBXBuildRule */,
-				BB47F2F02BF030120080A7EF /* PBXBuildRule */,
-				BB47F2EF2BF0300F0080A7EF /* PBXBuildRule */,
-				BB47F2EE2BF0300B0080A7EF /* PBXBuildRule */,
-				BB47F2ED2BF030070080A7EF /* PBXBuildRule */,
-				BB47F2EC2BF030000080A7EF /* PBXBuildRule */,
-				BB47F2EB2BF02FEB0080A7EF /* PBXBuildRule */,
-				BB47F2EA2BF02FD80080A7EF /* PBXBuildRule */,
 			);
 			dependencies = (
 			);
@@ -306,7 +159,6 @@
 			);
 			mainGroup = 0633C8B21EF90F6600F6A311;
 			packageReferences = (
-				BB3F22E82BED1F5E002D2E0A /* XCRemoteSwiftPackageReference "BodyTracking" */,
 			);
 			productRefGroup = 0633C8BC1EF90F6600F6A311 /* Products */;
 			projectDirPath = "";
@@ -550,17 +402,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		BB3F22E82BED1F5E002D2E0A /* XCRemoteSwiftPackageReference "BodyTracking" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/Reality-Dev/BodyTracking";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.0.32;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
 	};
 	rootObject = 0633C8B31EF90F6600F6A311 /* Project object */;
 }

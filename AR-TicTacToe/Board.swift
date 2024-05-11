@@ -102,18 +102,29 @@ class Board {
         // Mapping 3D Scene Coordinates to Game Grid Positions
         // Assuming the center of the board is at (0,0,0) and spans equally in all directions
         let boardCenter = node.position
-        let relativeX = position.x - boardCenter.x
-        let relativeZ = position.z - boardCenter.z
+        
+        // Calculate relative positions, converting CGFloat to Float if necessary
+        let relativeX = position.x - Float(boardCenter.x)
+        let relativeZ = position.z - Float(boardCenter.z)
 
-         Calculate which square the position corresponds to
-        let columnIndex = Int(floor((relativeX + Dimensions.SQUARE_SIZE * 1.5) / Dimensions.SQUARE_SIZE))
-        let rowIndex = Int(floor((relativeZ + Dimensions.SQUARE_SIZE * 1.5) / Dimensions.SQUARE_SIZE))
+        // Convert Dimensions.SQUARE_SIZE to Float if it's defined as CGFloat
+        let squareSize = Float(Dimensions.SQUARE_SIZE)
+        let offset = squareSize * 1.5
+        let columnPosition = relativeX + offset
+        let rowPosition = relativeZ + offset
 
-         Validate if the calculated indices are within the bounds of the board
-        if rowIndex >= 0, rowIndex < 3, columnIndex >= 0, columnIndex < 3 {
+        // Calculate column and row indices
+        let columnIndex = Int(floor(columnPosition / squareSize))
+        let rowIndex = Int(floor(rowPosition / squareSize))
+
+        // Check if the calculated position is within the bounds of the board
+        let isValidColumn = columnIndex >= 0 && columnIndex < 3
+        let isValidRow = rowIndex >= 0 && rowIndex < 3
+
+        if isValidColumn && isValidRow {
             return (rowIndex, columnIndex)
         }
-        
+
         return nil // Return nil if the position is outside the game board
     }
 }
