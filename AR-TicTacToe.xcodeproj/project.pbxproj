@@ -308,7 +308,7 @@
 				DEVELOPMENT_TEAM = 3TJXQ23QL9;
 				INFOPLIST_FILE = "AR-TicTacToe/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "dk.tv2.AR-TicTacToe";
+				PRODUCT_BUNDLE_IDENTIFIER = "AR-TicTacToe";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -322,7 +322,7 @@
 				DEVELOPMENT_TEAM = 3TJXQ23QL9;
 				INFOPLIST_FILE = "AR-TicTacToe/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "dk.tv2.AR-TicTacToe";
+				PRODUCT_BUNDLE_IDENTIFIER = "AR-TicTacToe";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
