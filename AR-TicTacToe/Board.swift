@@ -28,6 +28,16 @@ class Board {
         let length = Dimensions.SQUARE_SIZE * 4
         let height:CGFloat = Dimensions.BOARD_GRID_HEIGHT
         let width:CGFloat = Dimensions.BOARD_GRID_WIDTH
+
+        // Adding a physics body for collision boundaries
+        let boardGeometry = SCNBox(width: CGFloat(Dimensions.SQUARE_SIZE * 3), height: 0.01, length: CGFloat(Dimensions.SQUARE_SIZE * 3), chamferRadius: 0)
+        let boardShape = SCNPhysicsShape(geometry: boardGeometry, options: nil)
+        let boardPhysicsBody = SCNPhysicsBody(type: .static, shape: boardShape)
+        boardPhysicsBody.restitution = 0.1
+        boardPhysicsBody.friction = 0.5
+        
+        node.physicsBody = boardPhysicsBody
+        
         
         // Loop through each row of the board
         for l in 0..<4 {
@@ -87,21 +97,19 @@ class Board {
         self.nodeToSquare = nodeToSquare
         self.squareToPosition = squareToPosition
     }
-}
-
-extension Board {
+    
     func positionToGamePosition(_ position: SCNVector3) -> GamePosition? {
-        /** Mapping 3D Scene Coordinates to Game Grid Positions */
+        // Mapping 3D Scene Coordinates to Game Grid Positions
         // Assuming the center of the board is at (0,0,0) and spans equally in all directions
         let boardCenter = node.position
         let relativeX = position.x - boardCenter.x
         let relativeZ = position.z - boardCenter.z
 
-        // Calculate which square the position corresponds to
+         Calculate which square the position corresponds to
         let columnIndex = Int(floor((relativeX + Dimensions.SQUARE_SIZE * 1.5) / Dimensions.SQUARE_SIZE))
         let rowIndex = Int(floor((relativeZ + Dimensions.SQUARE_SIZE * 1.5) / Dimensions.SQUARE_SIZE))
 
-        // Validate if the calculated indices are within the bounds of the board
+         Validate if the calculated indices are within the bounds of the board
         if rowIndex >= 0, rowIndex < 3, columnIndex >= 0, columnIndex < 3 {
             return (rowIndex, columnIndex)
         }

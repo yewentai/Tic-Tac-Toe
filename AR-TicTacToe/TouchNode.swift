@@ -33,7 +33,7 @@ public class TouchNode: SCNNode {
         material.diffuse.contents = UIColor.red // Sets the color of the sphere to red for visibility.
 
         // Uncomment the following line during debugging to visualize the node.
-        // geometry = sphere
+         geometry = sphere
 
         // Assign the material to the sphere.
         sphere.firstMaterial = material
