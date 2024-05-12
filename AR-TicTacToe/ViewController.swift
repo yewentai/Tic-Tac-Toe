@@ -457,7 +457,7 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate {
                 }
                 guard let outBuffer = outputBuffer else {
                     self.gameStateLabel.text = ("No output buffer detected")
-                    self.touchNode.isHidden = true
+                    self.touchNode.isHidden = false
                     return
                 }
                 
@@ -509,7 +509,7 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate {
                     
                 }else{
                     self.gameStateLabel.text = ("No tip finger detected")
-                    self.touchNode.isHidden = true
+                    self.touchNode.isHidden = false
                     return
                 }
             }
