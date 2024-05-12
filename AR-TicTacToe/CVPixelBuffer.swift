@@ -10,7 +10,7 @@ import CoreVideo
 
 extension CVPixelBuffer {
     // Static variable to set a threshold for what counts as significant white pixel presence.
-    public static var whitePixelThreshold = 200
+    public static var whitePixelThreshold = 10
     
     /// Searches for the highest white pixel that exceeds the threshold.
     /// - Returns: A normalized CGPoint representing the topmost white pixel's location, or nil if below threshold.

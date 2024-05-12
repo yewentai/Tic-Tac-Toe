@@ -344,12 +344,12 @@
 				INFOPLIST_FILE = "AR-TicTacToe/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "TicTacoToe Beta";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.puzzle-games";
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.4;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.jeffeehsiung;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jeffee.hsiung.tictactoe;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -366,12 +366,12 @@
 				INFOPLIST_FILE = "AR-TicTacToe/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = TicTacoToe;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.puzzle-games";
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.4;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.jeffeehsiung;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jeffee.hsiung.tictactoe;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;

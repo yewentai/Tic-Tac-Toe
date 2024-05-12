@@ -119,40 +119,45 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate {
     
     // Method to start a new turn based on the current game state
     private func newTurn() {
-        guard playerType[game.currentPlayer]! == .ai else { return }
-        
-        //run AI on background thread
-        DispatchQueue.global(qos: DispatchQoS.QoSClass.background).async {
-            // let the AI determine which action to perform
-            let action = GameAI(game: self.game).bestAction
-                
-            // once an action has been determined, perform it on main thread
-            DispatchQueue.main.async {
-                // perform action or crash (game AI should never return an invalid action!)
-                guard let newGameState = self.game.perform(action: action) else { fatalError() }
-                    
-                // block to execute after we have updated/animated the visual state of the game
-                let updateGameState = {
-                    // for some reason we have to put this in a main.async block in order to actually
-                    // get to main thread. It appears that SceneKit animations do not return on mainthread..
-                    DispatchQueue.main.async {
-                        self.game = newGameState
+        if playerType[game.currentPlayer] == .ai {
+            // AI's turn to play
+            DispatchQueue.global(qos: .background).async {
+                let action = GameAI(game: self.game).bestAction
+                DispatchQueue.main.async {
+                    guard let newGameState = self.game.perform(action: action) else { fatalError("AI generated invalid action") }
+                    self.updateUIForGameState(newGameState) {
+                        self.animateGameAction(action, completionHandler: {
+                            DispatchQueue.main.async {
+                                self.game = newGameState
+                            }
+                        })
                     }
                 }
-                
-                // animate action
-                switch action {
-                case .put(let at):
-                    self.put(piece: Figure.figure(for: self.game.currentPlayer),
-                             at: at,
-                             completionHandler: updateGameState)
-                    
-                case .move(let from, let to):
-                    self.move(from: from,
-                              to: to,
-                              completionHandler: updateGameState)
-                }
             }
+        } else {
+            // Human's turn to play
+            if game.mode == .move {
+                // If it is human's turn and the mode is 'move', we enable hand detection
+                performHandGestureDetection()
+                gameStateLabel.text = "finger detection mode"
+            }
+        }
+    }
+    // Method to update UI based on the game state changes
+    private func updateUIForGameState(_ state: GameState, completion: @escaping () -> Void) {
+        DispatchQueue.main.async {
+            // Update any relevant UI components here
+            self.gameStateLabel.text = "\(state.currentPlayer.rawValue): Move"
+            completion()
+        }
+    }
+    // Method to handle animations for game actions
+    private func animateGameAction(_ action: GameAction, completionHandler: @escaping () -> Void) {
+        switch action {
+        case .put(let position):
+            self.put(piece: Figure.figure(for: self.game.currentPlayer), at: position, completionHandler: completionHandler)
+        case .move(let from, let to):
+            self.move(from: from, to: to, completionHandler: completionHandler)
         }
     }
     
@@ -440,71 +445,77 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate {
         currentBuffer = frame.capturedImage
         performHandGestureDetection()
     }
-
+    
     func performHandGestureDetection() {
+        // To avoid force unwrap in VNImageRequestHandler
         guard let buffer = currentBuffer else { return }
         handDetector.performDetection(inputBuffer: buffer) { [weak self] outputBuffer, _ in
             DispatchQueue.main.async {
                 guard let self = self else { return }
                 defer {
                     self.currentBuffer = nil  // Reset the buffer for the next frame
-                    self.touchNode.isHidden = true  // Hide touch node after processing
                 }
-
-                guard let outBuffer = outputBuffer, let tipPoint = outBuffer.searchTopPoint() else {
+                guard let outBuffer = outputBuffer else {
+                    self.gameStateLabel.text = ("No output buffer detected")
+                    self.touchNode.isHidden = true
                     return
                 }
                 
                 // Update preview image for debugging
                 self.previewView.image = UIImage(ciImage: CIImage(cvPixelBuffer: outBuffer))
+                self.previewView.isHidden = false
                 
-                // Convert normalized fingertip point to screen coordinates
-                let imageFingerPoint = VNImagePointForNormalizedPoint(tipPoint, Int(self.view.bounds.size.width), Int(self.view.bounds.size.height))
-                let currentFingerPosition = CGPoint(x: imageFingerPoint.x, y: imageFingerPoint.y)
-       
-                // Perform a hit test at the converted point
-                let hitTestResults = self.sceneView.hitTest(currentFingerPosition, options: nil)
-                guard let hitTestResult = hitTestResults.first else { return }
-                
-                // Check if the node that was hit is part of the current game
-                if let nodeName = hitTestResult.node.name, ["X", "O"].contains(nodeName) {
-                    if hitTestResult.node.name == Figure.figure(for: self.game.currentPlayer).name {
-                        self.touchNode.position = hitTestResult.worldCoordinates
-                        self.touchNode.isHidden = false
-                        if self.touchNode.parent == nil {
-                            self.sceneView.scene.rootNode.addChildNode(self.touchNode)
-                        }
-                        
-                        // Initialize interaction details if this is a new touch
-                        if self.lastInteractionDetails == nil {
-                            if let initialSquare = self.board.nodeToSquare[hitTestResult.node] {
-                                self.lastInteractionDetails = (node: hitTestResult.node, initialPosition: hitTestResult.worldCoordinates, initialSquare: initialSquare)
+                if let tipPoint = outBuffer.searchTopPoint(){
+                    // Get image coordinate using coreVideo functions from the normalized point
+                    let imageFingerPoint = VNImagePointForNormalizedPoint(tipPoint, Int(self.view.bounds.size.width), Int(self.view.bounds.size.height))
+                    let currentFingerPosition = CGPoint(x: imageFingerPoint.x, y: imageFingerPoint.y)
+                    self.gameStateLabel.text = ("Current Finger Position: \(imageFingerPoint)")
+
+                    let hitResults = self.sceneView.hitTest(currentFingerPosition, options: [SCNHitTestOption.firstFoundOnly: false, SCNHitTestOption.rootNode: self.board.node])
+                    
+                    // Iterate over hit results to find a node that corresponds to a board square
+                    for result in hitResults {
+                        if let square = self.board.nodeToSquare[result.node] {
+                            self.gameStateLabel.text = "finger and figure node detected"
+                            // Position our touchNode slighlty above the plane (0.1cm).
+                            self.touchNode.position = result.worldCoordinates
+                            self.touchNode.position.y += 0.001
+                            self.touchNode.isHidden = false
+                            self.gameStateLabel.text = ("Touch node position updated to: \(self.touchNode.position)")
+                            if self.touchNode.parent == nil {
+                                self.sceneView.scene.rootNode.addChildNode(self.touchNode)
+                                self.gameStateLabel.text = ("Touch node added to scene")
+                            }
+                            // Handling initial interaction setup
+                            if self.lastInteractionDetails == nil {
+                                self.lastInteractionDetails = (node: result.node, initialPosition: result.worldCoordinates, initialSquare: square)
                             }
                         }
-                    }
-                }
-
-                // Check for the end of interaction when the node is resting
-                if let details = self.lastInteractionDetails, hitTestResult.node === details.node {
-                    if hitTestResult.node.physicsBody?.isResting ?? false {
-                        let finalPosition = hitTestResult.worldCoordinates
-                        if let finalSquare = self.board.positionToGamePosition(finalPosition), details.initialSquare != finalSquare {
-                            let fromKey = "\(details.initialSquare.0)x\(details.initialSquare.1)"
-                            let toKey = "\(finalSquare.x)x\(finalSquare.y)"
-                            self.figures[toKey] = self.figures[fromKey]
-                            self.figures[fromKey] = nil
-                            
-                            // Update game state
-                            self.updateGameState(from: details.initialSquare, to: finalSquare)
+                        // Handling end of interaction when the node is resting
+                        if let details = self.lastInteractionDetails, result.node === details.node, result.node.physicsBody?.isResting ?? false {
+                            let finalPosition = result.worldCoordinates
+                            if let finalSquare = self.board.positionToGamePosition(finalPosition), details.initialSquare != finalSquare {
+                                let fromKey = "\(details.initialSquare.0)x\(details.initialSquare.1)"
+                                let toKey = "\(finalSquare.x)x\(finalSquare.y)"
+                                self.figures[toKey] = self.figures[fromKey]
+                                self.figures[fromKey] = nil
+                                // Update game state
+                                self.updateGameState(from: details.initialSquare, to: finalSquare)
+                            }
+                            // Clear the interaction details after processing
+                            self.lastInteractionDetails = nil
                         }
-                        // Clear the interaction details after processing
-                        self.lastInteractionDetails = nil
                     }
+                    
+                }else{
+                    self.gameStateLabel.text = ("No tip finger detected")
+                    self.touchNode.isHidden = true
+                    return
                 }
             }
         }
     }
-
+    
     func updateGameState(from initial: (Int, Int), to final: (Int, Int)) {
         let moveAction = GameAction.move(from: (x: initial.0, y: initial.1), to: (x: final.0, y: final.1))
         if let newGameState = game.perform(action: moveAction) {
@@ -527,10 +538,24 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate {
 
     // Called when a new node has been mapped to an AR anchor
     func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
-        // notified when the ARSCNView detects an ARAnchor with its assigned SCNNode
+        if let planeAnchor = anchor as? ARPlaneAnchor {
+            DispatchQueue.main.async {
+                // Create a node to visualize the plane using the anchor's geometry
+                let planeNode = SCNNode()
+                let planeGeometry = ARSCNPlaneGeometry(device: renderer.device!)!
+                planeGeometry.update(from: planeAnchor.geometry)
+                planeGeometry.firstMaterial?.diffuse.contents = UIColor.blue.withAlphaComponent(0.5)
+                planeNode.geometry = planeGeometry
+                planeNode.eulerAngles.x = -.pi / 2  // Rotate to lie flat
+                
+                node.addChildNode(planeNode)
+                
+                // Optionally, remove the indicator after some time or after the board is placed
+            }
+        }
         planeCount += 1
     }
-    
+
 
     // Called when an existing node has been updated with new AR data
     func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
@@ -568,7 +593,11 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate {
     }
 }
 
-
+/**
+func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
+    planeCount += 1
+}
+ */
 /**
 func performHandGestureDetection() {
     // To avoid force unwrap in VNImageRequestHandler
@@ -637,3 +666,67 @@ func calculateMovementVector(currentPosition: SCNVector3, lastPosition: SCNVecto
     return SCNVector3(x: currentPosition.x - lastPos.x, y: currentPosition.y - lastPos.y, z: currentPosition.z - lastPos.z)
 }
 */
+
+
+/**
+    func performHandGestureDetection() {
+        guard let buffer = currentBuffer else { return }
+        handDetector.performDetection(inputBuffer: buffer) { [weak self] outputBuffer, _ in
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+                self.currentBuffer = nil  // Always reset the buffer for the next frame
+                guard let outBuffer = outputBuffer, let tipPoint = outBuffer.searchTopPoint() else {
+                    self.touchNode.isHidden = true  // Hide if no detection
+                    return
+                }
+                
+                guard let outBuffer = outputBuffer, let tipPoint = outBuffer.searchTopPoint() else {
+                    return
+                }
+                
+                // Update preview image for debugging
+                self.previewView.image = UIImage(ciImage: CIImage(cvPixelBuffer: outBuffer))
+                self.previewView.isHidden = false  // Make sure it's visible
+                
+                // Convert normalized fingertip point to screen coordinates
+                let imageFingerPoint = VNImagePointForNormalizedPoint(tipPoint, Int(self.view.bounds.size.width), Int(self.view.bounds.size.height))
+                let currentFingerPosition = CGPoint(x: imageFingerPoint.x, y: imageFingerPoint.y)
+                
+                // Perform a hit test at the converted point
+                let hitTestResults = self.sceneView.hitTest(currentFingerPosition, options: nil)
+                guard let hitTestResult = hitTestResults.first else {
+                    self.previewView.isHidden = true
+                    return }
+                
+                // Check if the node that was hit is part of the current game
+                if let nodeName = hitTestResult.node.name, ["X", "O"].contains(nodeName) {
+                    if hitTestResult.node.name == Figure.figure(for: self.game.currentPlayer).name {
+                        self.touchNode.position = hitTestResult.worldCoordinates
+                        if self.touchNode.parent == nil {
+                            self.sceneView.scene.rootNode.addChildNode(self.touchNode)
+                        }
+                        // Handling initial interaction setup
+                        if self.lastInteractionDetails == nil {
+                            if let initialSquare = self.board.nodeToSquare[hitTestResult.node] {
+                                self.lastInteractionDetails = (node: hitTestResult.node, initialPosition: hitTestResult.worldCoordinates, initialSquare: initialSquare)
+                            }
+                        }
+                    }
+                }// Handling end of interaction when the node is resting
+                if let details = self.lastInteractionDetails, hitTestResult.node === details.node, hitTestResult.node.physicsBody?.isResting ?? false {
+                    let finalPosition = hitTestResult.worldCoordinates
+                    if let finalSquare = self.board.positionToGamePosition(finalPosition), details.initialSquare != finalSquare {
+                        let fromKey = "\(details.initialSquare.0)x\(details.initialSquare.1)"
+                        let toKey = "\(finalSquare.x)x\(finalSquare.y)"
+                        self.figures[toKey] = self.figures[fromKey]
+                        self.figures[fromKey] = nil
+                        // Update game state
+                        self.updateGameState(from: details.initialSquare, to: finalSquare)
+                    }
+                    // Clear the interaction details after processing
+                    self.lastInteractionDetails = nil
+                }
+            }
+        }
+    }
+    */
