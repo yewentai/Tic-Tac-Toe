@@ -10,7 +10,7 @@ import CoreVideo
 
 extension CVPixelBuffer {
     // Static variable to set a threshold for what counts as significant white pixel presence.
-    public static var whitePixelThreshold = 10
+    public static var whitePixelThreshold = 50
     
     /// Searches for the highest white pixel that exceeds the threshold.
     /// - Returns: A normalized CGPoint representing the topmost white pixel's location, or nil if below threshold.
@@ -35,11 +35,12 @@ extension CVPixelBuffer {
                     // Accessing pixel data for RGB values and determining if it's significant.
                     let pixelIndex = y * bytesPerRow + x * 4
                     let pixel = buffer[pixelIndex]
+
+                    /**
                     let abovePixel = buffer[min(pixelIndex + bytesPerRow, height * bytesPerRow)]
                     let belowPixel = buffer[max(pixelIndex - bytesPerRow, 0)]
                     let rightPixel = buffer[min(pixelIndex + 4, width * 4)]
                     let leftPixel = buffer[max(pixelIndex - 4, 0)]
-
                     // Checking connectivity and significance of a white pixel and its neighbors.
                     if pixel > 0 && abovePixel > 0 && belowPixel > 0 && rightPixel > 0 && leftPixel > 0 {
                         let newPoint = CGPoint(x: x, y: y)
@@ -49,15 +50,34 @@ extension CVPixelBuffer {
                             break outerLoop
                         }
                     }
+                    */
+                    let r = buffer[pixelIndex]
+                    let g = buffer[pixelIndex + 1]
+                    let b = buffer[pixelIndex + 2]
+                    
+                    // Simplified threshold check to consider a pixel "white"
+                    if r > 200 && g > 200 && b > 200 {
+                        let whiteCount = 1 // Start counting this as a valid white pixel
+                        if whiteCount > whitePixelsCount {
+                            whitePixelsCount = whiteCount
+                            returnPoint = CGPoint(x: CGFloat(x) / CGFloat(width), y: CGFloat(y) / CGFloat(height))
+                            if whitePixelsCount >= CVPixelBuffer.whitePixelThreshold {
+                                break // Early exit if threshold met
+                            }
+                        }
+                    }
+                }
+                if whitePixelsCount >= CVPixelBuffer.whitePixelThreshold {
+                    break // Early exit if threshold met
                 }
             }
         }
-        
+        /**
         // Evaluate the number of significant pixels detected.
         if whitePixelsCount < CVPixelBuffer.whitePixelThreshold {
             returnPoint = nil
         }
-        
+        */
         return returnPoint
     }
     

@@ -1,18 +1,19 @@
-//
-//  ViewController.swift
-//  AR-TicTacToe
-//
-//  Created by jeffee hsiung on 5/11/24.
-//  Copyright © 2024 Jeffee. All rights reserved.
-//
+/*
+See LICENSE folder for this sample’s licensing information.
+
+Abstract:
+The app's main view controller object.
+*/
+
 import UIKit
+import AVFoundation
+import Vision
 import SceneKit
 import ARKit
 import CoreML
-import Vision
 
-class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate {
-
+class CameraViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate {
+    
     // UI
     @IBOutlet weak var planeSearchLabel: UILabel!
     @IBOutlet weak var planeSearchOverlay: UIView!
@@ -29,12 +30,12 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate {
     // State
     private func updatePlaneOverlay() {
         DispatchQueue.main.async {
-        self.planeSearchOverlay.isHidden = self.currentPlane != nil
-        if self.planeCount == 0 {
-            self.planeSearchLabel.text = "Move around to allow the app the find a plane..."
-        } else {
-            self.planeSearchLabel.text = "Tap on a plane surface to place board..."
-        }
+            self.planeSearchOverlay.isHidden = self.currentPlane != nil
+            if self.planeCount == 0 {
+                self.planeSearchLabel.text = "Move around to allow the app the find a plane..."
+            } else {
+                self.planeSearchLabel.text = "Tap on a plane surface to place board..."
+            }
         }
     }
     var playerType = [
@@ -70,17 +71,27 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate {
             }
         }
     }
-    private var figures:[String:SCNNode] = [:]
-    private var lightNode:SCNNode?
-    private var floorNode:SCNNode?
-    private var draggingFrom:GamePosition? = nil
-    private var draggingFromPosition:SCNVector3? = nil
+    var figures:[String:SCNNode] = [:]
+    var lightNode:SCNNode?
+    var floorNode:SCNNode?
+    var draggingFrom:GamePosition? = nil
+    var draggingFromPosition:SCNVector3? = nil
     
     private var currentBuffer: CVPixelBuffer?
     private var lastInteractionDetails: (node: SCNNode, initialPosition: SCNVector3, initialSquare: (Int, Int))?
     let handDetector = HandDetector()
     let touchNode = TouchNode()
     var previewView = UIImageView()
+    
+    private var cameraView: CameraView { view as! CameraView }
+    private let videoDataOutputQueue = DispatchQueue(label: "CameraFeedDataOutput", qos: .userInteractive)
+    private var cameraFeedSession: AVCaptureSession?
+    private var handPoseRequest = VNDetectHumanHandPoseRequest()
+    
+    private var evidenceBuffer = [HandGestureProcessor.PointsPair]()
+    private var lastObservationTimestamp = Date()
+    
+    private var gestureProcessor = HandGestureProcessor()
     
     // MARK: - Configuration
     override func viewDidLoad() {
@@ -91,7 +102,7 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate {
         configureLighting()
         prepareFeedbackGenerators()
     }
-
+    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         /** create a session configuration */
@@ -105,6 +116,7 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate {
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        cameraFeedSession?.stopRunning()
         sceneView.session.pause()
     }
     
@@ -113,24 +125,67 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate {
         let panGesture = UIPanGestureRecognizer(target: self, action: #selector(didPan))
         sceneView.addGestureRecognizer(tapGesture)
         sceneView.addGestureRecognizer(panGesture)
+        
+        handPoseRequest.maximumHandCount = 1
+        // Add state change handler to hand gesture processor.
+        gestureProcessor.didChangeStateClosure = { [weak self] state in
+            self?.handleGestureStateChange(state: state)
+        }
+        // Add evidence handler to hand gesture processor.
+        let recognizer = UITapGestureRecognizer(target: self, action: #selector(handleGesture(_:)))
+        sceneView.addGestureRecognizer(recognizer)
     }
-
+    
     private func configureLighting() {
         sceneView.automaticallyUpdatesLighting = false
         sceneView.antialiasingMode = .multisampling4X
     }
-
+    
     private func prepareFeedbackGenerators() {
         selectionFeedbackGenerator.prepare()
         impactFeedbackGenerator.prepare()
     }
-
+    
     private func configureARSession() {
         let configuration = ARWorldTrackingConfiguration()
         configuration.planeDetection = .horizontal
         configuration.isLightEstimationEnabled = true
         sceneView.session.delegate = self
         sceneView.session.run(configuration)
+    }
+    
+    func setupAVSession() {
+        guard let camera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else {
+            self.gameStateLabel.text = ("Could not find a rear facing camera.")
+            return
+        }
+        guard let deviceInput = try? AVCaptureDeviceInput(device: camera) else {
+            self.gameStateLabel.text = ("Could not create video device input.")
+            return
+        }
+        let session = AVCaptureSession()
+        session.beginConfiguration()
+        session.sessionPreset = AVCaptureSession.Preset.high
+        
+        // Add a video input.
+        guard session.canAddInput(deviceInput) else {
+            self.gameStateLabel.text = ("Could not add video device input to the session")
+            return
+        }
+        session.addInput(deviceInput)
+        
+        let dataOutput = AVCaptureVideoDataOutput()
+        if session.canAddOutput(dataOutput) {
+            session.addOutput(dataOutput)
+            // Add a video data output.
+            dataOutput.alwaysDiscardsLateVideoFrames = true
+            dataOutput.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String: Int(kCVPixelFormatType_420YpCbCr8BiPlanarFullRange)]
+            dataOutput.setSampleBufferDelegate(self, queue: videoDataOutputQueue)
+        } else {
+            self.gameStateLabel.text = ("Could not add video data output to the session")
+        }
+        session.commitConfiguration()
+        cameraFeedSession = session
     }
     
     // MARK: - GameState Management
@@ -140,13 +195,13 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate {
         removeAllFigures()
         figures.removeAll()
     }
-
+    
     private func removeAllFigures() {
         for (_, figure) in figures {
             figure.removeFromParentNode()
         }
     }
-
+    
     // Reset the game to the initial state
     private func reset() {
         let alert = UIAlertController(title: "Game type", message: "Choose players", preferredStyle: .alert)
@@ -154,19 +209,19 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate {
             self.beginNewGame([
                 GamePlayer.x: GamePlayerType.human,
                 GamePlayer.o: GamePlayerType.ai
-                ])
+            ])
         }))
         alert.addAction(UIAlertAction(title: "x:HUMAN vs o:HUMAN", style: .default, handler: { action in
             self.beginNewGame([
                 GamePlayer.x: GamePlayerType.human,
                 GamePlayer.o: GamePlayerType.human
-                ])
+            ])
         }))
         alert.addAction(UIAlertAction(title: "x:AI vs o:AI", style: .default, handler: { action in
             self.beginNewGame([
                 GamePlayer.x: GamePlayerType.ai,
                 GamePlayer.o: GamePlayerType.ai
-                ])
+            ])
         }))
         present(alert, animated: true, completion: nil)
     }
@@ -192,7 +247,6 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate {
             // Human's turn to play
             if game.mode == .move {
                 // If it is human's turn and the mode is 'move', we enable hand detection
-                performHandGestureDetection()
                 gameStateLabel.text = "finger detection mode"
             }
         }
@@ -242,6 +296,7 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate {
                      y: y))
         }
     }
+    
     // MARK: - Gestures
     
     @objc func didPan(_ sender:UIPanGestureRecognizer) {
@@ -273,11 +328,11 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate {
             print("ended \(location)")
             
             guard let draggingFrom = draggingFrom,
-                let square = squareFrom(location: location),
-                square.0.0 != draggingFrom.x || square.0.1 != draggingFrom.y,
-                let newGameState = game.perform(action: .move(from: draggingFrom, to: (x: square.0.0, y: square.0.1))) 
+                  let square = squareFrom(location: location),
+                  square.0.0 != draggingFrom.x || square.0.1 != draggingFrom.y,
+                  let newGameState = game.perform(action: .move(from: draggingFrom, to: (x: square.0.0, y: square.0.1)))
             else { revertDrag()
-                    return
+                return
             }
             
             // move in visual model
@@ -335,9 +390,9 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate {
            let newGameState = game.perform(action: .put(at: (x: squareData.0.0, y: squareData.0.1))) {
             put(piece: Figure.figure(for: game.currentPlayer),
                 at: squareData.0) {
-                    DispatchQueue.main.async {
-                        self.game = newGameState
-                    }
+                DispatchQueue.main.async {
+                    self.game = newGameState
+                }
             }
         }
     }
@@ -381,7 +436,7 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate {
         let action = SCNAction.fadeIn(duration: 0.5)
         piece.runAction(action, completionHandler: completionHandler)
     }
-
+    
     private func revertDrag() {
         if let draggingFrom = draggingFrom {
             
@@ -393,7 +448,102 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate {
             self.draggingFromPosition = nil
         }
     }
+    
+    func processPoints(thumbTip: CGPoint?, indexTip: CGPoint?) {
+        // Check that we have both points.
+        guard let thumbPoint = thumbTip, let indexPoint = indexTip else {
+            // If there were no observations for more than 2 seconds reset gesture processor.
+            if Date().timeIntervalSince(lastObservationTimestamp) > 2 {
+                gestureProcessor.reset()
+            }
+            cameraView.showPoints([], color: .clear)
+            return
+        }
+        
+        // Convert points from AVFoundation coordinates to UIKit coordinates.
+        let previewLayer = cameraView.previewLayer
+        let thumbPointConverted = previewLayer.layerPointConverted(fromCaptureDevicePoint: thumbPoint)
+        let indexPointConverted = previewLayer.layerPointConverted(fromCaptureDevicePoint: indexPoint)
+        
+        // Process new points
+        gestureProcessor.processPointsPair((thumbPointConverted, indexPointConverted))
+    }
+    
+    private func handleGestureStateChange(state: HandGestureProcessor.State) {
+        let pointsPair = gestureProcessor.lastProcessedPointsPair
+        var tipsColor: UIColor
+        switch state {
+        case .possiblePinch, .possibleApart:
+            // "possible": states, collect points in the evidence buffer
+            evidenceBuffer.append(pointsPair)
+            tipsColor = .orange
+        case .pinched:
+            // The user is performing a pinch gesture
+            DispatchQueue.main.async {
+                self.handlePinchGesture()
+            }
+            // Finally, move to the current point.
+            tipsColor = .green
+        case .apart, .unknown:
+            // stopped. Discard any evidence buffer points.
+            evidenceBuffer.removeAll()
+            tipsColor = .red
+        }
+        cameraView.showPoints([pointsPair.thumbTip, pointsPair.indexTip], color: tipsColor)
+    }
+    
+    private func handlePinchGesture() {
+        // Check if it's the human's turn
+        guard case .move = game.mode, playerType[game.currentPlayer]! == .human else { return }
+        // Interact with the game piece
+        // for each buffer point in the evidence buffer check interaction with the game piece and the board
+        for pointsPair in evidenceBuffer {
+            // Calculate the mid-point between the thumb tip and the index tip
+            let midPoint = CGPoint.midPoint(p1: pointsPair.thumbTip, p2: pointsPair.indexTip)
+            // Convert the mid-point to a 3D point in the AR scene
+            guard let midPoint3D = groundPositionFrom(location: midPoint) else { return }
+            // Check if the mid-point is within the board
+            if board.positionToGamePosition(midPoint3D) != nil {
+                // Check if the mid-point is within a square on the board
+                if let square = squareFrom(location: midPoint) {
+                    // Check if this is the first interaction that lastInteractionDetails is nil, define this pointas fromSquare
+                    if lastInteractionDetails == nil {
+                        lastInteractionDetails = (node: square.1, initialPosition: midPoint3D, initialSquare: square.0)
+                    } else {
+                        let action = SCNAction.move(to: SCNVector3(midPoint3D.x, midPoint3D.y + Float(Dimensions.DRAG_LIFTOFF), midPoint3D.z), duration: 0.1)
+                        figures["\(String(describing: lastInteractionDetails?.initialSquare.0))x\(String(describing: lastInteractionDetails?.initialSquare.1))"]?.runAction(action)
+                        // Update the game state, figures dictionary, the UI, and the last interaction details
+                        if let newGameState = game.perform(action: .move(from: lastInteractionDetails!.initialSquare, to: square.0)) {
+                            // update figure logic positoin - node dictionary
+                            let toSquareId = "\(square.0.0)x\(square.0.1)"
+                            figures[toSquareId] = figures["\(String(describing: lastInteractionDetails?.initialSquare.0))x\(String(describing: lastInteractionDetails?.initialSquare.1))"]
+                            figures["\(String(describing: lastInteractionDetails?.initialSquare.0))x\(String(describing: lastInteractionDetails?.initialSquare.1))"] = nil
+                            // move the figure to the new position
+                            let newPosition = sceneView.scene.rootNode.convertPosition(square.1.position, from: square.1.parent)
+                            let action = SCNAction.move(to: newPosition, duration: 0.1)
+                            figures[toSquareId]?.runAction(action) {
+                                DispatchQueue.main.async {
+                                    self.game = newGameState
+                                }
+                            }
+                        }
+                        // update the last interaction details
+                        lastInteractionDetails = (node: square.1, initialPosition: midPoint3D, initialSquare: square.0)
 
+                    }
+                }
+            }
+        }
+        // Clear the evidence buffer.
+        evidenceBuffer.removeAll()
+    }
+    @IBAction func handleGesture(_ gesture: UITapGestureRecognizer) {
+        guard gesture.state == .ended else {
+            return
+        }
+        evidenceBuffer.removeAll()
+    }
+    
     // MARK: - Transformations
     
     func groundPositionFrom(location: CGPoint) -> SCNVector3? {
@@ -434,121 +584,11 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate {
         }
         return nil
     }
-
     // MARK: - ARSessionDelegate and Hand Gesture Integration
     
     func session(_ session: ARSession, didUpdate frame: ARFrame) {
-        guard currentBuffer == nil, case .normal = frame.camera.trackingState else { return }
-        currentBuffer = frame.capturedImage
-        performHandGestureDetection()
     }
 
-    func performHandGestureDetection() {
-        // To avoid force unwrap in VNImageRequestHandler
-        guard let buffer = currentBuffer else { return }
-        // Always show the touch node for debugging
-        touchNode.isHidden = false
-        // Perform hand gesture detection using the HandDetector class
-        handDetector.performDetection(inputBuffer: buffer) { [weak self] outputBuffer, _ in
-            // on Background thread for processing
-            DispatchQueue.main.async {
-                // 1. Unwrap self and output buffer
-                guard let self = self else { return }
-                // 2. reset the buffer for the next frame when finished (defer block)
-                defer {
-                    self.currentBuffer = nil  // Reset the buffer for the next frame
-                }
-                guard let outBuffer = outputBuffer else {
-                    self.gameStateLabel.text = ("No output buffer detected")
-                    return
-                }
-                // 3. Update preview image for debugging
-                self.previewView.image = UIImage(ciImage: CIImage(cvPixelBuffer: outBuffer))
-                self.previewView.isHidden = false
-                // 4. Search for the top point of the hand
-                if let tipPoint = outBuffer.searchTopPoint(){
-                    // 6. Obtain the image coordinate using coreVideo functions from the normalized point
-                    let imageFingerPoint = VNImagePointForNormalizedPoint(tipPoint, Int(self.view.bounds.size.width), Int(self.view.bounds.size.height))
-                    // update game label text with tip finger position rounded to integer
-                    self.gameStateLabel.text = ("Tip finger position: \(Int(imageFingerPoint.x)), \(Int(imageFingerPoint.y))")
-                    // 7. Check for interaction with SceneKit nodes (game pieces: Figure O and X on the board)
-                    /**
-                    let hitTestResults = self.sceneView.hitTest(CGPoint(x: imageFingerPoint.x, y: imageFingerPoint.y), options: [SCNHitTestOption.searchMode: SCNHitTestSearchMode.all]) 
-                    */
-                    let hitTestResults = self.sceneView.hitTest(imageFingerPoint, options: [SCNHitTestOption.firstFoundOnly: false, SCNHitTestOption.rootNode: self.board.node])
-                    // Iterate over hit results to find a node that corresponds to a board square
-                    for result in hitTestResults {
-                        if let finalSquare = self.board.nodeToSquare[result.node] {
-                            // position the touch node slightly above the plane (0.1cm)
-                            let finalPosition = result.worldCoordinates
-                            self.touchNode.simdPosition = SIMD3<Float>(finalPosition.x, finalPosition.y, finalPosition.z)
-                            self.touchNode.position.y += 0.001
-                            // update game label text with the square position rounded to integer
-                            self.gameStateLabel.text = ("Node detected at: \(finalSquare.0), \(finalSquare.1)")
-                            // let force vector be the difference between the board node position and the tip point
-                            let forceMultiplier: Float = 2.0  // Adjust this value to increase or decrease the force
-                            var forceVector = SCNVector3(x: Float(finalPosition.x - self.board.node.position.x) * forceMultiplier, y: Float(finalPosition.y - self.board.node.position.y) * forceMultiplier, z: 0)
-                            // Handling initial interaction setup
-                            if self.lastInteractionDetails == nil {
-                                self.lastInteractionDetails = (node: result.node, initialPosition: finalPosition, initialSquare: finalSquare)
-                                // Provide haptic feedback on initial interaction
-                                self.selectionFeedbackGenerator.selectionChanged()
-                                self.impactFeedbackGenerator.impactOccurred()
-                            } else{
-                                // Handling end of interaction when the node is resting
-                                if self.lastInteractionDetails?.node === result.node {
-                                    // update game label text with the final position rounded to integer
-                                    self.gameStateLabel.text = ("Node resting at: \(Int(finalPosition.x)), \(Int(finalPosition.y))")
-                                    if self.lastInteractionDetails!.initialSquare != finalSquare {
-                                        // Calculate the force vector based on the difference between the initial and final positions
-                                        forceVector = SCNVector3(x: Float(finalPosition.x - self.lastInteractionDetails!.initialPosition.x) * forceMultiplier, y: Float(finalPosition.y - self.lastInteractionDetails!.initialPosition.y) * forceMultiplier, z: 0)
-                                    }
-                                }
-                            }
-                            // Let touchnode collide with the game piece to push it around
-                            result.node.physicsBody?.applyForce(forceVector, asImpulse: true)
-                            // Update game label text alerting the force applied
-                            self.gameStateLabel.text = ("Force applied to node")
-                            // Update the figures dictionary, game state, the UI, and the last interaction details
-                            let fromKey = "\(self.lastInteractionDetails!.initialSquare.0)x\(self.lastInteractionDetails!.initialSquare.1)"
-                            let toKey = "\(finalSquare.0)x\(finalSquare.1)"
-                            self.figures[toKey] = self.figures[fromKey]
-                            self.figures[fromKey] = nil
-                            self.updateGameState(from: self.lastInteractionDetails!.initialSquare, to: finalSquare)
-                            // Update the last interaction details for the next interaction
-                            self.lastInteractionDetails = (node: result.node, initialPosition: finalPosition, initialSquare: finalSquare)
-                            
-                            break
-                        }
-                    }
-                    // no interaction detected
-
-                }
-                // 5. If no tip finger detected, alert on game lable (show touch node for debugging)
-                else{
-                    self.gameStateLabel.text = ("No tip finger detected")
-                    return
-                }
-            }
-        }
-    }
-    
-    func updateGameState(from initial: (Int, Int), to final: (Int, Int)) {
-        // 13. Update the game state based on the initial and final square positions
-        let moveAction = GameAction.move(from: (x: initial.0, y: initial.1), to: (x: final.0, y: final.1))
-        if let newGameState = game.perform(action: moveAction) {
-            let newPosition = sceneView.scene.rootNode.convertPosition(board.squareToPosition["\(final.0)x\(final.1)"]!, from: board.node)
-            let action = SCNAction.move(to: newPosition, duration: 0.1)
-            figures["\(final.0)x\(final.1)"]?.runAction(action)
-            DispatchQueue.main.async {
-                // update the game label
-                self.gameStateLabel.text = ("Moved from: \(initial.0), \(initial.1) to: \(final.0), \(final.1)")
-                self.game = newGameState
-            }
-        }
-    }
-
-    
     // MARK: - ARSCNViewDelegate
     private func enableEnvironmentMapWithIntensity(_ intensity: CGFloat) {
         if sceneView.scene.lightingEnvironment.contents == nil {
@@ -612,6 +652,46 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate {
             } else {
                 self.enableEnvironmentMapWithIntensity(25)
             }
+        }
+    }
+}
+
+extension CameraViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
+    public func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+        var thumbTip: CGPoint?
+        var indexTip: CGPoint?
+        
+        defer {
+            DispatchQueue.main.sync {
+                self.processPoints(thumbTip: thumbTip, indexTip: indexTip)
+            }
+        }
+
+        let handler = VNImageRequestHandler(cmSampleBuffer: sampleBuffer, orientation: .up, options: [:])
+        do {
+            // Perform VNDetectHumanHandPoseRequest
+            try handler.perform([handPoseRequest])
+            // Continue only when a hand was detected in the frame.
+            guard let observation = handPoseRequest.results?.first else {
+                return
+            }
+            // Get points for thumb and index finger.
+            let thumbPoints = try observation.recognizedPoints(.thumb)
+            let indexFingerPoints = try observation.recognizedPoints(.indexFinger)
+            // Look for tip points.
+            guard let thumbTipPoint = thumbPoints[.thumbTip], let indexTipPoint = indexFingerPoints[.indexTip] else {
+                return
+            }
+            // Ignore low confidence points.
+            guard thumbTipPoint.confidence > 0.3 && indexTipPoint.confidence > 0.3 else {
+                return
+            }
+            // Convert points from Vision coordinates to AVFoundation coordinates.
+            thumbTip = CGPoint(x: thumbTipPoint.location.x, y: 1 - thumbTipPoint.location.y)
+            indexTip = CGPoint(x: indexTipPoint.location.x, y: 1 - indexTipPoint.location.y)
+        } catch {
+            cameraFeedSession?.stopRunning()
+            self.gameStateLabel.text = ("CameraFeedSession Stopped")
         }
     }
 }
