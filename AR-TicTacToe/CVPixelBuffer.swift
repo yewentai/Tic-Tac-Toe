@@ -72,12 +72,6 @@ extension CVPixelBuffer {
                 }
             }
         }
-        /**
-        // Evaluate the number of significant pixels detected.
-        if whitePixelsCount < CVPixelBuffer.whitePixelThreshold {
-            returnPoint = nil
-        }
-        */
         return returnPoint
     }
     

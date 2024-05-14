@@ -61,7 +61,7 @@ class Figure {
     }
     
     private class func addPhysicsBody(to node: SCNNode, with geometry: SCNGeometry) {
-        let options = [SCNPhysicsShape.Option.type: SCNPhysicsShape.ShapeType.boundingBox]
+        let options = [SCNPhysicsShape.Option.type: SCNPhysicsShape.ShapeType.convexHull]
         let shape = SCNPhysicsShape(geometry: geometry, options: options)
         let physicsBody = SCNPhysicsBody(type: .dynamic, shape: shape) // Changed from static to dynamic
         physicsBody.mass = 0.5

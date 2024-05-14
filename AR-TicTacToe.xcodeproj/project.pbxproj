@@ -24,7 +24,6 @@
 		BB94559E2BEC1CF80078F605 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = BB94559D2BEC1CF80078F605 /* Main.storyboard */; };
 		BBB1FAD42BF1562400D3DF2F /* HandGestureProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB1FAD32BF1562400D3DF2F /* HandGestureProcessor.swift */; };
 		BBB1FAD72BF164AB00D3DF2F /* CameraViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB1FAD62BF164AB00D3DF2F /* CameraViewController.swift */; };
-		BBB1FAD92BF1691800D3DF2F /* CameraView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB1FAD82BF1691800D3DF2F /* CameraView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -50,7 +49,6 @@
 		BBB1FAD32BF1562400D3DF2F /* HandGestureProcessor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HandGestureProcessor.swift; sourceTree = "<group>"; };
 		BBB1FAD52BF1565E00D3DF2F /* HandPose.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.entitlements; path = HandPose.entitlements; sourceTree = "<group>"; };
 		BBB1FAD62BF164AB00D3DF2F /* CameraViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CameraViewController.swift; sourceTree = "<group>"; };
-		BBB1FAD82BF1691800D3DF2F /* CameraView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CameraView.swift; sourceTree = "<group>"; };
 		BBCC033C2BD944730031CB5C /* code_architecture.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = code_architecture.md; sourceTree = "<group>"; };
 		BBCC033D2BD947FE0031CB5C /* hand_tracking_plan.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = hand_tracking_plan.md; sourceTree = "<group>"; };
 		BBCC033E2BD9647B0031CB5C /* hand_detection_tracking.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = hand_detection_tracking.md; sourceTree = "<group>"; };
@@ -90,7 +88,6 @@
 		0633C8BD1EF90F6600F6A311 /* AR-TicTacToe */ = {
 			isa = PBXGroup;
 			children = (
-				BBB1FAD82BF1691800D3DF2F /* CameraView.swift */,
 				BBB1FAD62BF164AB00D3DF2F /* CameraViewController.swift */,
 				BBB1FAD52BF1565E00D3DF2F /* HandPose.entitlements */,
 				BBB1FAD32BF1562400D3DF2F /* HandGestureProcessor.swift */,
@@ -195,7 +192,6 @@
 				BB47F2E92BEFAF040080A7EF /* ViewController.swift in Sources */,
 				0633C8DB1EF910CB00F6A311 /* Extensions.swift in Sources */,
 				0633C8D71EF9107600F6A311 /* Figure.swift in Sources */,
-				BBB1FAD92BF1691800D3DF2F /* CameraView.swift in Sources */,
 				70065C021F05A98C00F3E801 /* GameAI.swift in Sources */,
 				BB9455962BEC0C840078F605 /* TouchNode.swift in Sources */,
 				0633C8D91EF9108C00F6A311 /* GameState.swift in Sources */,

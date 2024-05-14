@@ -83,7 +83,6 @@ class CameraViewController: UIViewController, ARSessionDelegate, ARSCNViewDelega
     let touchNode = TouchNode()
     var previewView = UIImageView()
     
-    private var cameraView: CameraView { view as! CameraView }
     private let videoDataOutputQueue = DispatchQueue(label: "CameraFeedDataOutput", qos: .userInteractive)
     private var cameraFeedSession: AVCaptureSession?
     private var handPoseRequest = VNDetectHumanHandPoseRequest()
@@ -131,9 +130,6 @@ class CameraViewController: UIViewController, ARSessionDelegate, ARSCNViewDelega
         gestureProcessor.didChangeStateClosure = { [weak self] state in
             self?.handleGestureStateChange(state: state)
         }
-        // Add evidence handler to hand gesture processor.
-        let recognizer = UITapGestureRecognizer(target: self, action: #selector(handleGesture(_:)))
-        sceneView.addGestureRecognizer(recognizer)
     }
     
     private func configureLighting() {
@@ -266,6 +262,19 @@ class CameraViewController: UIViewController, ARSessionDelegate, ARSCNViewDelega
             self.put(piece: Figure.figure(for: self.game.currentPlayer), at: position, completionHandler: completionHandler)
         case .move(let from, let to):
             self.move(from: from, to: to, completionHandler: completionHandler)
+        case .remove(from: let from):
+            // If removing a piece, animate the removal (e.g., fading out)
+            if let piece = figures["\(from.x)x\(from.y)"] {
+                let fadeOutAction = SCNAction.fadeOut(duration: 0.5)
+                piece.runAction(fadeOutAction) {
+                    // After animation completes, remove the piece from the scene and dictionary
+                    piece.removeFromParentNode()
+                    self.figures.removeValue(forKey: "\(from.x)x\(from.y)")
+                    completionHandler()
+                }
+            } else {
+                completionHandler()  // Ensure callback is called even if no piece found
+            }
         }
     }
     
@@ -449,47 +458,24 @@ class CameraViewController: UIViewController, ARSessionDelegate, ARSCNViewDelega
         }
     }
     
-    func processPoints(thumbTip: CGPoint?, indexTip: CGPoint?) {
-        // Check that we have both points.
-        guard let thumbPoint = thumbTip, let indexPoint = indexTip else {
-            // If there were no observations for more than 2 seconds reset gesture processor.
-            if Date().timeIntervalSince(lastObservationTimestamp) > 2 {
-                gestureProcessor.reset()
-            }
-            cameraView.showPoints([], color: .clear)
-            return
-        }
-        
-        // Convert points from AVFoundation coordinates to UIKit coordinates.
-        let previewLayer = cameraView.previewLayer
-        let thumbPointConverted = previewLayer.layerPointConverted(fromCaptureDevicePoint: thumbPoint)
-        let indexPointConverted = previewLayer.layerPointConverted(fromCaptureDevicePoint: indexPoint)
-        
-        // Process new points
-        gestureProcessor.processPointsPair((thumbPointConverted, indexPointConverted))
-    }
-    
     private func handleGestureStateChange(state: HandGestureProcessor.State) {
         let pointsPair = gestureProcessor.lastProcessedPointsPair
-        var tipsColor: UIColor
         switch state {
         case .possiblePinch, .possibleApart:
             // "possible": states, collect points in the evidence buffer
             evidenceBuffer.append(pointsPair)
-            tipsColor = .orange
+            // show on game label
+            self.gameStateLabel.text = "Possible Pinch"
         case .pinched:
             // The user is performing a pinch gesture
+            self.gameStateLabel.text = "Pinch State Processing"
             DispatchQueue.main.async {
                 self.handlePinchGesture()
             }
-            // Finally, move to the current point.
-            tipsColor = .green
         case .apart, .unknown:
             // stopped. Discard any evidence buffer points.
             evidenceBuffer.removeAll()
-            tipsColor = .red
         }
-        cameraView.showPoints([pointsPair.thumbTip, pointsPair.indexTip], color: tipsColor)
     }
     
     private func handlePinchGesture() {
@@ -503,51 +489,80 @@ class CameraViewController: UIViewController, ARSessionDelegate, ARSCNViewDelega
             // Convert the mid-point to a 3D point in the AR scene
             guard let midPoint3D = groundPositionFrom(location: midPoint) else { return }
             // Check if the mid-point is within the board
-            if board.positionToGamePosition(midPoint3D) != nil {
-                // Check if the mid-point is within a square on the board
-                if let square = squareFrom(location: midPoint) {
-                    // Check if this is the first interaction that lastInteractionDetails is nil, define this pointas fromSquare
-                    if lastInteractionDetails == nil {
-                        lastInteractionDetails = (node: square.1, initialPosition: midPoint3D, initialSquare: square.0)
-                    } else {
-                        let action = SCNAction.move(to: SCNVector3(midPoint3D.x, midPoint3D.y + Float(Dimensions.DRAG_LIFTOFF), midPoint3D.z), duration: 0.1)
-                        figures["\(String(describing: lastInteractionDetails?.initialSquare.0))x\(String(describing: lastInteractionDetails?.initialSquare.1))"]?.runAction(action)
-                        // Update the game state, figures dictionary, the UI, and the last interaction details
-                        if let newGameState = game.perform(action: .move(from: lastInteractionDetails!.initialSquare, to: square.0)) {
-                            // update figure logic positoin - node dictionary
-                            let toSquareId = "\(square.0.0)x\(square.0.1)"
-                            figures[toSquareId] = figures["\(String(describing: lastInteractionDetails?.initialSquare.0))x\(String(describing: lastInteractionDetails?.initialSquare.1))"]
-                            figures["\(String(describing: lastInteractionDetails?.initialSquare.0))x\(String(describing: lastInteractionDetails?.initialSquare.1))"] = nil
-                            // move the figure to the new position
-                            let newPosition = sceneView.scene.rootNode.convertPosition(square.1.position, from: square.1.parent)
-                            let action = SCNAction.move(to: newPosition, duration: 0.1)
-                            figures[toSquareId]?.runAction(action) {
-                                DispatchQueue.main.async {
-                                    self.game = newGameState
-                                }
-                            }
-                        }
-                        // update the last interaction details
-                        lastInteractionDetails = (node: square.1, initialPosition: midPoint3D, initialSquare: square.0)
-
-                    }
+            if let newPosition = board.positionToGamePosition(midPoint3D) {
+                // Check if the mid-point interact with a game piece on the board
+                if let gamePiece = findGamePieceAt(midPoint3D) {
+                    // Original gamePiece game position (row, col)
+                    let initialPosition = board.nodeToSquare[gamePiece]!
+                    // Move the game piece to the new 3D position
+                    moveGamePiece(gamePiece, to: midPoint3D)
+                    // Move further to algin new position to node cell on board
+                    updateGameState(from: initialPosition, to: newPosition)
                 }
             }
+            // Do nothing if the mid-point is outside of the baord
         }
         // Clear the evidence buffer.
         evidenceBuffer.removeAll()
     }
-    @IBAction func handleGesture(_ gesture: UITapGestureRecognizer) {
-        guard gesture.state == .ended else {
+    
+    // MARK: - Utilities
+    
+    func updateGameState(from initial: GamePosition, to final: GamePosition) {
+        if let newGameState = game.perform(action: .move(from: initial, to: final)) {
+            figures["\(final.x)x\(final.y)"] = figures["\(initial.x)x\(initial.y)"]
+            figures["\(initial.x)x\(initial.y)"] = nil
+            // move further from random x y position to board cell
+            let newPosition = sceneView.scene.rootNode.convertPosition(board.squareToPosition["\(final.x)x\(final.y)"]!, from: board.node)
+            let action = SCNAction.move(to: newPosition, duration: 0.1)
+            figures["\(final.x)x\(final.y)"]?.runAction(action)
+            DispatchQueue.main.async {
+                // update the game label
+                self.gameStateLabel.text = ("Moved from: \(initial.x), \(initial.y) to: \(final.x), \(final.y)")
+                self.game = newGameState
+            }
+        }
+    }
+    
+    // Finds a game piece at the given 3D position using hit testing.
+    func findGamePieceAt(_ position: SCNVector3) -> SCNNode? {
+        // First, convert the 3D position to 2D screen coordinates
+        let screenPosition = sceneView.projectPoint(position)
+        let screenCGPoint = CGPoint(x: CGFloat(screenPosition.x), y: CGFloat(screenPosition.y))
+
+        // Now, perform a hit test with these screen coordinates
+        let hitResults = sceneView.hitTest(screenCGPoint, options: [SCNHitTestOption.searchMode : SCNHitTestSearchMode.all.rawValue])
+        return hitResults.first(where: { $0.node.name == "O" || $0.node.name == "X" })?.node
+    }
+
+    
+    // Moves the identified game piece to the new position.
+    func moveGamePiece(_ gamePiece: SCNNode, to position: SCNVector3) {
+        let action = SCNAction.move(to: position, duration: 0.1)
+        gamePiece.runAction(action)
+    }
+    
+    func processPoints(thumbTip: CGPoint?, indexTip: CGPoint?) {
+        // Check that we have both points.
+        guard let thumbPoint = thumbTip, let indexPoint = indexTip else {
+            // If there were no observations for more than 2 seconds reset gesture processor.
+            if Date().timeIntervalSince(lastObservationTimestamp) > 2 {
+                gestureProcessor.reset()
+            }
             return
         }
-        evidenceBuffer.removeAll()
+        // Convert points from AVFoundation coordinates to UIKit coordinates
+        let screenSize = UIScreen.main.bounds.size
+        let thumbPointConverted = CGPoint(x: thumbPoint.x * screenSize.width, y: (1 - thumbPoint.y) * screenSize.height)
+        let indexPointConverted = CGPoint(x: indexPoint.x * screenSize.width, y: (1 - indexPoint.y) * screenSize.height)
+        // Process new points
+        gestureProcessor.processPointsPair((thumbPointConverted, indexPointConverted))
     }
     
     // MARK: - Transformations
     
+    // Converts the midpoint to the corresponding 3D position in the AR scene using raycasting.
     func groundPositionFrom(location: CGPoint) -> SCNVector3? {
-        /** Convert  2D Touch Coordinates to 3D Scene Coordinates */
         guard let query = sceneView.raycastQuery(from: location, allowing: .estimatedPlane, alignment: .horizontal) else { return nil }
         let results = sceneView.session.raycast(query)
         if let result = results.first {
