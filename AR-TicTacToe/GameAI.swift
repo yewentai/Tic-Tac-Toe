@@ -1,9 +1,5 @@
 //
 //  GameAI.swift
-//  AR-TicTacToe
-//
-//  Created by Bjarne Lundgren on 29/06/2017.
-//  Copyright © 2017 Bjarne Møller Lundgren. All rights reserved.
 //
 
 import Foundation
@@ -11,22 +7,20 @@ import Foundation
 private let MAX_ITERATIONS = 3
 private let SCORE_WINNING = 100
 
-/// this very simple Tic-Tac-Toe AI takes full advantage of the fact that the GameState
-/// is an immutable struct..
+// This simple Tic-Tac-Toe AI takes full advantage of the immutable GameState struct.
 struct GameAI {
-    let game:GameState
+    let game: GameState
     
-    /// simply returns list of squares that contain pieces belonging to player
-    /// or is empty (player == nil)
-    private func gameSquaresWhere(playerIs player:GamePlayer?) -> [GamePosition] {
+    // Returns a list of positions on the board that contain pieces belonging to the specified player,
+    // or are empty if `player` is nil.
+    private func gameSquaresWhere(playerIs player: GamePlayer?) -> [GamePosition] {
         var positions = [GamePosition]()
         
         for x in 0..<game.board.count {
             for y in 0..<game.board[x].count {
                 if (player != nil && game.board[x][y] == player!.rawValue) ||
                    (player == nil && game.board[x][y].isEmpty) {
-                    positions.append(GamePosition(x: x,
-                                                  y: y))
+                    positions.append(GamePosition(x: x, y: y))
                 }
             }
         }
@@ -34,53 +28,50 @@ struct GameAI {
         return positions
     }
     
-    /// returns list of possible actions given the GameState
+    // Returns a list of possible actions given the current game state.
     private func possibleActions() -> [GameAction] {
         let emptySquares = gameSquaresWhere(playerIs: nil)
         
-        // if in "put" mode then every possible action is to put a piece in any empty square
+        // If in "put" mode, every possible action is to put a piece in any empty square.
         if game.mode == .put {
             return emptySquares.map { GameAction.put(at: $0) }
         }
         
         var actions = [GameAction]()
         
-        // everyone of the currentPlayers pieces
+        // If in "move" mode, generate all possible move actions from current player's pieces to empty squares.
         for sourceSquare in gameSquaresWhere(playerIs: game.currentPlayer) {
-            // each can be moved to any empty square..
             for destinationSquare in emptySquares {
-                actions.append(.move(from: sourceSquare,
-                                     to: destinationSquare))
+                actions.append(.move(from: sourceSquare, to: destinationSquare))
             }
         }
         
         return actions
     }
     
-    /// returns list of SCORED possible actions given GameState and a player bias (player who we want to win)
-    /// Recursively simulates actions and the effect of actions..
-    private func scoredPossibleActions(playerBias:GamePlayer,
-                                       iterationCount:Int = 0) -> [(score:Int, action:GameAction)] {
-        var scoredActions = [(score:Int, action:GameAction)]()
+    // Returns a list of scored possible actions given the current game state and a player bias (player who we want to win).
+    // Recursively simulates actions and their effects.
+    private func scoredPossibleActions(playerBias: GamePlayer, iterationCount: Int = 0) -> [(score: Int, action: GameAction)] {
+        var scoredActions = [(score: Int, action: GameAction)]()
         
         for action in possibleActions() {
             var score = 0
             guard let gameStatePostAction = game.perform(action: action) else { fatalError() }
             
             if let winner = gameStatePostAction.currentWinner {
+                // If there's a winner, assign a score based on the winner and the iteration count.
                 let scoreForWin = SCORE_WINNING - iterationCount
-                if winner == playerBias {    // if playerBias wins it's positive score!
+                if winner == playerBias {    // If playerBias wins, it's a positive score.
                     score += scoreForWin
-                } else {    // otherwise big negative score!
+                } else {    // Otherwise, it's a big negative score.
                     score -= scoreForWin * 2
                 }
                 
             } else {
-                // add worst follow-up action score..
+                // Add the worst follow-up action score if there are further iterations allowed.
                 if iterationCount < MAX_ITERATIONS {
-                    let followUpActions = GameAI(game: gameStatePostAction).scoredPossibleActions(playerBias: playerBias,
-                                                                                                  iterationCount: iterationCount + 1)
-                    var minScoredAction:(score:Int, action:GameAction)? = nil
+                    let followUpActions = GameAI(game: gameStatePostAction).scoredPossibleActions(playerBias: playerBias, iterationCount: iterationCount + 1)
+                    var minScoredAction: (score: Int, action: GameAction)? = nil
                     for scoredAction in followUpActions {
                         if minScoredAction == nil || minScoredAction!.score > scoredAction.score {
                             minScoredAction = scoredAction
@@ -88,7 +79,6 @@ struct GameAI {
                     }
                     score += minScoredAction!.score
                 }
-                
             }
             
             scoredActions.append((score: score, action: action))
@@ -97,8 +87,9 @@ struct GameAI {
         return scoredActions
     }
     
-    var bestAction:GameAction {
-        var topScoredAction:(score:Int, action:GameAction)? = nil
+    // Computes and returns the best possible action for the current player.
+    var bestAction: GameAction {
+        var topScoredAction: (score: Int, action: GameAction)? = nil
         for scoredAction in scoredPossibleActions(playerBias: game.currentPlayer) {
             if topScoredAction == nil || topScoredAction!.score < scoredAction.score {
                 topScoredAction = scoredAction

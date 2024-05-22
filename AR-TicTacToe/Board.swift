@@ -6,40 +6,31 @@ import Foundation
 import SceneKit
 
 class Board {
-    let node:SCNNode
-    let nodeToSquare:[SCNNode:(Int,Int)]
-    let squareToPosition:[String:SCNVector3]
+    let node: SCNNode
+    let nodeToSquare: [SCNNode: (Int, Int)]
+    let squareToPosition: [String: SCNVector3]
     
     init() {
         node = SCNNode()
-        var nodeToSquare = [SCNNode:(Int,Int)]()
-        var squareToPosition = [String:SCNVector3]()
-        
+        var nodeToSquare = [SCNNode: (Int, Int)]()
+        var squareToPosition = [String: SCNVector3]()
         
         let length = Dimensions.SQUARE_SIZE * 4
-        let height:CGFloat = Dimensions.BOARD_GRID_HEIGHT
-        let width:CGFloat = Dimensions.BOARD_GRID_WIDTH
+        let height: CGFloat = Dimensions.BOARD_GRID_HEIGHT
+        let width: CGFloat = Dimensions.BOARD_GRID_WIDTH
         
-        //let sphereNode = SCNNode(geometry: SCNSphere(radius: 0.25))
-        //sphereNode.position = SCNVector3(0, 0.4, 0)
-        //boardNode.addChildNode(sphereNode)
-        
+        // Create the board squares and grid lines
         for l in 0..<4 {
             let lineOffset = length * 0.5 - (CGFloat(l + 1) * Dimensions.SQUARE_SIZE - Dimensions.SQUARE_SIZE * 0.5)
             
-            // squares
+            // Create squares for the game board
             if l > 0 {
                 for r in 0..<3 {
-                    let position = SCNVector3(lineOffset + Dimensions.SQUARE_SIZE * 0.5,
-                                              0.01,
-                                              //TODO: do a rowOffset like above for this, this is ugly!
-                        CGFloat(r - 1) * Dimensions.SQUARE_SIZE)
+                    let position = SCNVector3(lineOffset + Dimensions.SQUARE_SIZE * 0.5, 0.01, CGFloat(r - 1) * Dimensions.SQUARE_SIZE)
                     let square = (l - 1, r)
                     
-                    let geometry = SCNPlane(width: Dimensions.SQUARE_SIZE,
-                                            height: Dimensions.SQUARE_SIZE)
+                    let geometry = SCNPlane(width: Dimensions.SQUARE_SIZE, height: Dimensions.SQUARE_SIZE)
                     geometry.firstMaterial!.diffuse.contents = UIColor.clear
-                    //geometry.firstMaterial!.specular.contents = UIColor.white
                     
                     let squareNode = SCNNode(geometry: geometry)
                     squareNode.position = position
@@ -51,12 +42,8 @@ class Board {
                 }
             }
             
-            
-            // grid lines..
-            let geometry = SCNBox(width: width,
-                                  height: height,
-                                  length: length,
-                                  chamferRadius: height * 0.1)
+            // Create horizontal and vertical grid lines
+            let geometry = SCNBox(width: width, height: height, length: length, chamferRadius: height * 0.1)
             geometry.firstMaterial?.lightingModel = .physicallyBased
             geometry.firstMaterial?.diffuse.contents = UIImage(named: "Media.scnassets/scuffed-plastic2-alb.png")
             geometry.firstMaterial?.roughness.contents = UIImage(named: "Media.scnassets/scuffed-plastic-rough.png")
@@ -77,6 +64,4 @@ class Board {
         self.nodeToSquare = nodeToSquare
         self.squareToPosition = squareToPosition
     }
-    
-    
 }
