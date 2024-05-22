@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="13122.17" systemVersion="16F73" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
-    <device id="retina4_7" orientation="portrait">
-        <adaptation id="fullscreen"/>
-    </device>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="32700.99.1234" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
+    <device id="retina4_7" orientation="portrait" appearance="light"/>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13104.14"/>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22685"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
@@ -29,34 +28,47 @@
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="4Uz-Xu-8jV">
                                 <rect key="frame" x="0.0" y="623" width="375" height="44"/>
                                 <subviews>
-                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="jTx-ce-cmA">
-                                        <rect key="frame" x="16" y="7" width="68" height="30"/>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="jTx-ce-cmA">
+                                        <rect key="frame" x="16" y="7" width="68.5" height="30"/>
                                         <state key="normal" title="Start over"/>
                                         <connections>
                                             <action selector="didTapStartOver:" destination="BYZ-38-t0r" eventType="touchUpInside" id="N1H-cn-iTy"/>
                                         </connections>
                                     </button>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="x put" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="eu2-l6-zFn">
-                                        <rect key="frame" x="320.5" y="11.5" width="38.5" height="21"/>
+                                        <rect key="frame" x="321" y="11.5" width="38" height="21"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                         <nil key="textColor"/>
                                         <nil key="highlightedColor"/>
                                     </label>
+                                    <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" value="0.5" minValue="0.0" maxValue="1" translatesAutoresizingMaskIntoConstraints="NO" id="zMv-gp-nds" userLabel="Board Size Slider">
+                                        <rect key="frame" x="128.5" y="7" width="118" height="31"/>
+                                        <constraints>
+                                            <constraint firstAttribute="width" constant="114" id="v4z-Cm-39G"/>
+                                        </constraints>
+                                        <connections>
+                                            <action selector="sliderValueChanged:" destination="BYZ-38-t0r" eventType="valueChanged" id="mM6-Sc-up6"/>
+                                        </connections>
+                                    </slider>
                                 </subviews>
                                 <color key="backgroundColor" red="1" green="1" blue="1" alpha="0.5" colorSpace="calibratedRGB"/>
                                 <constraints>
                                     <constraint firstItem="jTx-ce-cmA" firstAttribute="centerY" secondItem="4Uz-Xu-8jV" secondAttribute="centerY" id="5Z6-Hj-Xgr"/>
+                                    <constraint firstItem="zMv-gp-nds" firstAttribute="leading" secondItem="jTx-ce-cmA" secondAttribute="trailing" constant="46" id="U7R-Wg-8MV"/>
                                     <constraint firstItem="jTx-ce-cmA" firstAttribute="leading" secondItem="4Uz-Xu-8jV" secondAttribute="leading" constant="16" id="Wsr-ys-Gw9"/>
                                     <constraint firstItem="eu2-l6-zFn" firstAttribute="centerY" secondItem="4Uz-Xu-8jV" secondAttribute="centerY" id="fkE-II-3TA"/>
+                                    <constraint firstItem="zMv-gp-nds" firstAttribute="centerX" secondItem="4Uz-Xu-8jV" secondAttribute="centerX" id="gRF-wl-sjW"/>
                                     <constraint firstAttribute="height" constant="44" id="glo-0S-Op2"/>
+                                    <constraint firstItem="eu2-l6-zFn" firstAttribute="leading" secondItem="zMv-gp-nds" secondAttribute="trailing" constant="76.5" id="hjj-Ye-1aF"/>
+                                    <constraint firstItem="zMv-gp-nds" firstAttribute="centerY" secondItem="4Uz-Xu-8jV" secondAttribute="centerY" id="pDo-Jk-fP3"/>
                                     <constraint firstAttribute="trailing" secondItem="eu2-l6-zFn" secondAttribute="trailing" constant="16" id="uYT-bm-RFt"/>
                                 </constraints>
                             </view>
                             <view userInteractionEnabled="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="grc-88-rNd">
-                                <rect key="frame" x="67.5" y="269" width="240" height="128"/>
+                                <rect key="frame" x="67.5" y="269.5" width="240" height="128"/>
                                 <subviews>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Move around to allow the app the find a plane..." textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="wyv-C6-wy1">
-                                        <rect key="frame" x="16" y="42.5" width="208" height="42.5"/>
+                                        <rect key="frame" x="16" y="43" width="208" height="42.5"/>
                                         <fontDescription key="fontDescription" style="UICTFontTextStyleHeadline"/>
                                         <nil key="textColor"/>
                                         <nil key="highlightedColor"/>
@@ -90,10 +102,12 @@
                         <outlet property="planeSearchLabel" destination="wyv-C6-wy1" id="emQ-aF-l19"/>
                         <outlet property="planeSearchOverlay" destination="grc-88-rNd" id="E9H-7L-FPz"/>
                         <outlet property="sceneView" destination="WA5-jJ-Nww" id="Gaz-gg-YDe"/>
+                        <outlet property="sizeSlider" destination="zMv-gp-nds" id="AAf-3w-Ikf"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
+            <point key="canvasLocation" x="73" y="-2"/>
         </scene>
     </scenes>
 </document>
