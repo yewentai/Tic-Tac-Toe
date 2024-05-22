@@ -19,6 +19,12 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         adjustBoardSize(to: sender.value)
     }
     
+    struct GamePosition: Equatable, Hashable {
+        var x: Int
+        var y: Int
+    }
+
+    
     // State
     private func updatePlaneOverlay() {
         DispatchQueue.main.async {
@@ -111,10 +117,13 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     func adjustBoardSize(to scale: Float) {
         let scaleFactor = CGFloat(scale)
         board.node.scale = SCNVector3(scaleFactor, scaleFactor, scaleFactor)
+        for figure in figures.values {
+            figure.scale = SCNVector3(scaleFactor, scaleFactor, scaleFactor)
+        }
     }
 
     
-    // from APples app
+    // from Apples app
     func enableEnvironmentMapWithIntensity(_ intensity: CGFloat) {
         if sceneView.scene.lightingEnvironment.contents == nil {
             if let environmentMap = UIImage(named: "Media.scnassets/environment_blur.exr") {

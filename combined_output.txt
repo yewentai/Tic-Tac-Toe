@@ -15,6 +15,10 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     @IBOutlet weak var gameStateLabel: UILabel!
     @IBAction func didTapStartOver(_ sender: Any) { reset() }
     @IBOutlet weak var sceneView: ARSCNView!
+    @IBOutlet weak var sizeSlider: UISlider!
+    @IBAction func sliderValueChanged(_ sender: UISlider) {
+        adjustBoardSize(to: sender.value)
+    }
     
     // State
     private func updatePlaneOverlay() {
@@ -95,7 +99,21 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         let pan = UIPanGestureRecognizer()
         pan.addTarget(self, action: #selector(didPan))
         sceneView.addGestureRecognizer(pan)
+        
+        setupSlider()
     }
+    
+    func setupSlider() {
+        sizeSlider.minimumValue = 0.5  // Minimum size factor
+        sizeSlider.maximumValue = 2.0  // Maximum size factor
+        sizeSlider.value = 1.0         // Default size factor
+    }
+    
+    func adjustBoardSize(to scale: Float) {
+        let scaleFactor = CGFloat(scale)
+        board.node.scale = SCNVector3(scaleFactor, scaleFactor, scaleFactor)
+    }
+
     
     // from APples app
     func enableEnvironmentMapWithIntensity(_ intensity: CGFloat) {
