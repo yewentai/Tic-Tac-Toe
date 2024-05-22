@@ -19,12 +19,6 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         adjustBoardSize(to: sender.value)
     }
     
-    struct GamePosition: Equatable, Hashable {
-        var x: Int
-        var y: Int
-    }
-
-    
     // State
     private func updatePlaneOverlay() {
         DispatchQueue.main.async {
