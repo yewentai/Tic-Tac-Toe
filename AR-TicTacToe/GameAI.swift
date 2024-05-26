@@ -2,9 +2,6 @@
 //  GameAI.swift
 //  AR-TicTacToe
 //
-//  Created by Bjarne Lundgren on 29/06/2017.
-//  Copyright © 2017 Bjarne Møller Lundgren. All rights reserved.
-//
 
 import Foundation
 
