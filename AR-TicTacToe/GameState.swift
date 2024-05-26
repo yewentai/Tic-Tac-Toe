@@ -97,10 +97,13 @@ struct GameState {
             
             // generate new game state and return it
             return GameState(currentPlayer: currentPlayer == .x ? .o : .x,
-                             mode: numberOfSquaresUsed >= 6 ? .move : .put,
+                             mode: .move,
                              board: newBoard)
             
         case .remove(let from):
+            guard case .remove = mode,
+                  board[from.x][from.y] != "" else {return nil}
+            
             var newBoard = board
             newBoard[from.x][from.y] = ""
             
