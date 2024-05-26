@@ -14,6 +14,7 @@ enum GamePlayerType:String {
 enum GameMode:String {
     case put = "put"
     case move = "move"
+    case remove = "remove"
 }
 
 enum GamePlayer:String {
@@ -25,6 +26,7 @@ enum GamePlayer:String {
 enum GameAction {
     case put(at:GamePosition)
     case move(from:GamePosition, to:GamePosition)
+    case remove(from: GamePosition)  // New action type for removing a piece
 }
 
 /// our completely immutable implementation of Tic-Tac-Toe
@@ -84,9 +86,31 @@ struct GameState {
             newBoard[from.x][from.y] = ""
             newBoard[to.x][to.y] = currentPlayer.rawValue
             
+            // determine how many pieces has been placed
+            let numberOfSquaresUsed = newBoard.reduce(0, {
+                return $1.reduce($0, { return $0 + ($1 != "" ? 1 : 0) })
+            })
+            
             // generate new game state and return it
             return GameState(currentPlayer: currentPlayer == .x ? .o : .x,
                              mode: .move,
+                             board: newBoard)
+            
+        case .remove(let from):
+            guard case .remove = mode,
+                  board[from.x][from.y] != "" else {return nil}
+            
+            var newBoard = board
+            newBoard[from.x][from.y] = ""
+            
+            // determine how many pieces has been placed
+            let numberOfSquaresUsed = newBoard.reduce(0, {
+                return $1.reduce($0, { return $0 + ($1 != "" ? 1 : 0) })
+            })
+            
+            // generate new game state and return it
+            return GameState(currentPlayer: currentPlayer == .x ? .o : .x,
+                             mode: numberOfSquaresUsed >= 6 ? .move : .put,
                              board: newBoard)
             
         }

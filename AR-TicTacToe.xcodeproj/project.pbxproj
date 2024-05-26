@@ -19,6 +19,13 @@
 		0633C8DD1EF910D900F6A311 /* Board.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0633C8DC1EF910D900F6A311 /* Board.swift */; };
 		70065C021F05A98C00F3E801 /* GameAI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70065C011F05A98C00F3E801 /* GameAI.swift */; };
 		708A9ACA1EFEFF4700D010B9 /* Media.scnassets in Resources */ = {isa = PBXBuildFile; fileRef = 708A9AC91EFEFF4700D010B9 /* Media.scnassets */; };
+		BB47F2E92BEFAF040080A7EF /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB47F2E82BEFAF040080A7EF /* ViewController.swift */; };
+		BB9455922BEBFFA20078F605 /* HandDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB9455912BEBFFA20078F605 /* HandDetector.swift */; };
+		BB9455942BEC0B9C0078F605 /* CVPixelBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB9455932BEC0B9C0078F605 /* CVPixelBuffer.swift */; };
+		BB9455962BEC0C840078F605 /* TouchNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB9455952BEC0C840078F605 /* TouchNode.swift */; };
+		BB9455992BEC15CF0078F605 /* HandModel.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = BB9455972BEC15CE0078F605 /* HandModel.mlmodel */; };
+		BBB1FAD42BF1562400D3DF2F /* HandGestureProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB1FAD32BF1562400D3DF2F /* HandGestureProcessor.swift */; };
+		BBB1FAD72BF164AB00D3DF2F /* CameraViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB1FAD62BF164AB00D3DF2F /* CameraViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -37,6 +44,17 @@
 		70065C001F05A00100F3E801 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		70065C011F05A98C00F3E801 /* GameAI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameAI.swift; sourceTree = "<group>"; };
 		708A9A921EFEF94700D010B9 /* media_sources.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = media_sources.txt; sourceTree = "<group>"; };
+		BB47F2E82BEFAF040080A7EF /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		BB9455912BEBFFA20078F605 /* HandDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HandDetector.swift; sourceTree = "<group>"; };
+		BB9455932BEC0B9C0078F605 /* CVPixelBuffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CVPixelBuffer.swift; sourceTree = "<group>"; };
+		BB9455952BEC0C840078F605 /* TouchNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchNode.swift; sourceTree = "<group>"; };
+		BB9455972BEC15CE0078F605 /* HandModel.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = HandModel.mlmodel; sourceTree = "<group>"; };
+		BBB1FAD32BF1562400D3DF2F /* HandGestureProcessor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HandGestureProcessor.swift; sourceTree = "<group>"; };
+		BBB1FAD52BF1565E00D3DF2F /* HandPose.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.entitlements; path = HandPose.entitlements; sourceTree = "<group>"; };
+		BBB1FAD62BF164AB00D3DF2F /* CameraViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CameraViewController.swift; sourceTree = "<group>"; };
+		BBCC033C2BD944730031CB5C /* code_architecture.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = code_architecture.md; sourceTree = "<group>"; };
+		BBCC033D2BD947FE0031CB5C /* hand_tracking_plan.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = hand_tracking_plan.md; sourceTree = "<group>"; };
+		BBCC033E2BD9647B0031CB5C /* hand_detection_tracking.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = hand_detection_tracking.md; sourceTree = "<group>"; };
 		708A9AC91EFEFF4700D010B9 /* Media.scnassets */ = {isa = PBXFileReference; lastKnownFileType = wrapper.scnassets; path = Media.scnassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -54,6 +72,9 @@
 		0633C8B21EF90F6600F6A311 = {
 			isa = PBXGroup;
 			children = (
+				BBCC033E2BD9647B0031CB5C /* hand_detection_tracking.md */,
+				BBCC033D2BD947FE0031CB5C /* hand_tracking_plan.md */,
+				BBCC033C2BD944730031CB5C /* code_architecture.md */,
 				70065C001F05A00100F3E801 /* README.md */,
 				0633C8BD1EF90F6600F6A311 /* AR-TicTacToe */,
 				0633C8BC1EF90F6600F6A311 /* Products */,
@@ -71,6 +92,12 @@
 		0633C8BD1EF90F6600F6A311 /* AR-TicTacToe */ = {
 			isa = PBXGroup;
 			children = (
+				BBB1FAD62BF164AB00D3DF2F /* CameraViewController.swift */,
+				BBB1FAD52BF1565E00D3DF2F /* HandPose.entitlements */,
+				BBB1FAD32BF1562400D3DF2F /* HandGestureProcessor.swift */,
+				BB9455952BEC0C840078F605 /* TouchNode.swift */,
+				BB9455932BEC0B9C0078F605 /* CVPixelBuffer.swift */,
+				BB9455912BEBFFA20078F605 /* HandDetector.swift */,
 				0633C8BE1EF90F6600F6A311 /* AppDelegate.swift */,
 				0633C8C01EF90F6600F6A311 /* ViewController.swift */,
 				0633C8C21EF90F6600F6A311 /* Main.storyboard */,
@@ -85,6 +112,8 @@
 				0633C8DC1EF910D900F6A311 /* Board.swift */,
 				708A9A921EFEF94700D010B9 /* media_sources.txt */,
 				708A9AC91EFEFF4700D010B9 /* Media.scnassets */,
+				BB9455972BEC15CE0078F605 /* HandModel.mlmodel */,
+				BB47F2E82BEFAF040080A7EF /* ViewController.swift */,
 			);
 			path = "AR-TicTacToe";
 			sourceTree = "<group>";
@@ -105,6 +134,8 @@
 			dependencies = (
 			);
 			name = "AR-TicTacToe";
+			packageProductDependencies = (
+			);
 			productName = "AR-TicTacToe";
 			productReference = 0633C8BB1EF90F6600F6A311 /* AR-TicTacToe.app */;
 			productType = "com.apple.product-type.application";
@@ -117,7 +148,7 @@
 			attributes = {
 				LastSwiftUpdateCheck = 0900;
 				LastUpgradeCheck = 0900;
-				ORGANIZATIONNAME = "Bjarne Møller Lundgren";
+				ORGANIZATIONNAME = Jeffee;
 				TargetAttributes = {
 					0633C8BA1EF90F6600F6A311 = {
 						CreatedOnToolsVersion = 9.0;
@@ -133,6 +164,8 @@
 				Base,
 			);
 			mainGroup = 0633C8B21EF90F6600F6A311;
+			packageReferences = (
+			);
 			productRefGroup = 0633C8BC1EF90F6600F6A311 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -161,13 +194,19 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0633C8C11EF90F6600F6A311 /* ViewController.swift in Sources */,
+				BB47F2E92BEFAF040080A7EF /* ViewController.swift in Sources */,
 				0633C8DB1EF910CB00F6A311 /* Extensions.swift in Sources */,
 				0633C8D71EF9107600F6A311 /* Figure.swift in Sources */,
 				70065C021F05A98C00F3E801 /* GameAI.swift in Sources */,
+				BB9455962BEC0C840078F605 /* TouchNode.swift in Sources */,
 				0633C8D91EF9108C00F6A311 /* GameState.swift in Sources */,
+				BB9455942BEC0B9C0078F605 /* CVPixelBuffer.swift in Sources */,
+				BBB1FAD42BF1562400D3DF2F /* HandGestureProcessor.swift in Sources */,
 				0633C8DD1EF910D900F6A311 /* Board.swift in Sources */,
 				0633C8BF1EF90F6600F6A311 /* AppDelegate.swift in Sources */,
+				BB9455992BEC15CF0078F605 /* HandModel.mlmodel in Sources */,
+				BBB1FAD72BF164AB00D3DF2F /* CameraViewController.swift in Sources */,
+				BB9455922BEBFFA20078F605 /* HandDetector.swift in Sources */,
 				0633C8D51EF9104400F6A311 /* Dimensions.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -305,7 +344,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = 3TJXQ23QL9;
+				DEVELOPMENT_TEAM = M7WKYGL7MJ;
 				INFOPLIST_FILE = "AR-TicTacToe/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "AR-TicTacToe";
@@ -319,7 +358,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = 3TJXQ23QL9;
+				DEVELOPMENT_TEAM = M7WKYGL7MJ;
 				INFOPLIST_FILE = "AR-TicTacToe/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "AR-TicTacToe";
