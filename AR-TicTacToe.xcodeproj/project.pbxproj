@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		0633C8BF1EF90F6600F6A311 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0633C8BE1EF90F6600F6A311 /* AppDelegate.swift */; };
-		0633C8C11EF90F6600F6A311 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0633C8C01EF90F6600F6A311 /* ViewController.swift */; };
 		0633C8C41EF90F6600F6A311 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0633C8C21EF90F6600F6A311 /* Main.storyboard */; };
 		0633C8C61EF90F6600F6A311 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0633C8C51EF90F6600F6A311 /* Assets.xcassets */; };
 		0633C8C91EF90F6600F6A311 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0633C8C71EF90F6600F6A311 /* LaunchScreen.storyboard */; };
@@ -44,6 +43,7 @@
 		70065C001F05A00100F3E801 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		70065C011F05A98C00F3E801 /* GameAI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameAI.swift; sourceTree = "<group>"; };
 		708A9A921EFEF94700D010B9 /* media_sources.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = media_sources.txt; sourceTree = "<group>"; };
+		708A9AC91EFEFF4700D010B9 /* Media.scnassets */ = {isa = PBXFileReference; lastKnownFileType = wrapper.scnassets; path = Media.scnassets; sourceTree = "<group>"; };
 		BB47F2E82BEFAF040080A7EF /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		BB9455912BEBFFA20078F605 /* HandDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HandDetector.swift; sourceTree = "<group>"; };
 		BB9455932BEC0B9C0078F605 /* CVPixelBuffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CVPixelBuffer.swift; sourceTree = "<group>"; };
@@ -55,7 +55,6 @@
 		BBCC033C2BD944730031CB5C /* code_architecture.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = code_architecture.md; sourceTree = "<group>"; };
 		BBCC033D2BD947FE0031CB5C /* hand_tracking_plan.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = hand_tracking_plan.md; sourceTree = "<group>"; };
 		BBCC033E2BD9647B0031CB5C /* hand_detection_tracking.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = hand_detection_tracking.md; sourceTree = "<group>"; };
-		708A9AC91EFEFF4700D010B9 /* Media.scnassets */ = {isa = PBXFileReference; lastKnownFileType = wrapper.scnassets; path = Media.scnassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -281,7 +280,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
@@ -332,7 +331,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
@@ -346,9 +345,13 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				DEVELOPMENT_TEAM = M7WKYGL7MJ;
 				INFOPLIST_FILE = "AR-TicTacToe/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "AR-TicTacToe";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -360,9 +363,13 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				DEVELOPMENT_TEAM = M7WKYGL7MJ;
 				INFOPLIST_FILE = "AR-TicTacToe/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "AR-TicTacToe";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
